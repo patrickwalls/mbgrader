@@ -1,0 +1,281 @@
+<!doctype html>
+
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/mini.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  <title>mbgrader</title>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1 style="text-align: center;">
+      mbgrader
+    </h1>
+
+    <h5>
+      <a href="#assignments"><span class="icon-home"></span></a>
+      /
+      <a href="" id="nav-assignment" style="display: none; color: black"></a>
+      /
+      <a href="" id="nav-question" style="display: none; color: black"></a>
+    </h5>
+
+
+  <!-- ########## ASSIGNMENTS VIEW ########## -->
+  <section id="assignments">
+
+    <table style="max-height: none;">
+      <thead>
+        <tr>
+          <th>Assignment</th>
+          <th>Submissions</th>
+          <th>Questions</th>
+          <th>Points</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- ASSIGNMENTS -->
+
+      </tbody>
+    </table>
+
+    <!-- NEW ASSIGNMENT MODAL -->
+    <label for="assignment-modal-control" class="button">New Assignment</label>
+    <input type="checkbox" id="assignment-modal-control" class="modal">
+      <div>
+        <div class="card large">
+          <label for="assignment-modal-control" id="assignment-modal-close" class="modal-close"></label>
+          <h3 class="section">Create Assignment</h3>
+          <form class="input-group vertical">
+            <input type="text" id="new_assignment_name" placeholder="Assignment Name"/>
+          </form>
+          <button id="create_assignment" class="">Create</button>
+        </div>
+      </div>
+
+    <!-- LOADING SUBMISSIONS MODAL -->
+    <label for="loading-submissions-modal-control" style="display: none;"></label>
+    <input type="checkbox" id="loading-submissions-modal-control" class="modal">
+      <div>
+        <div class="card large">
+          <label for="loading-submissions-modal-control" style="display: none;" class="modal-close"></label>
+          <h3>Loading submissions ...</h3>
+          <div class="spinner" style="margin: 20px auto;"></div>
+        </div>
+      </div>
+
+  </section>
+
+  <!-- ########## QUESTIONS VIEW ########## -->
+  <section id="questions" style="display: none;">
+
+    <table style="max-height: none;">
+      <thead>
+        <tr>
+          <th>Question</th>
+          <th>Variable Name</th>
+          <th>Maximum Grade</th>
+          <th>Tolerance</th>
+          <th>Batches</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- QUESTIONS -->
+
+      </tbody>
+    </table>
+
+    <!-- NEW QUESTION MODAL -->
+    <label for="question-modal-control" class="button">New Question</label>
+    <input type="checkbox" id="question-modal-control" class="modal">
+      <div>
+        <div class="card large" style="max-height: none">
+          <label for="question-modal-control" id="question-modal-close" class="modal-close"></label>
+          <h3 class="section">Create Question</h3>
+          <form class="input-group vertical">
+            <input type="text" id="new_question_name" placeholder="Question Name"/>
+            <input type="text" id="new_var_name" placeholder="Variable Name"/>
+            <input type="text" id="new_max_grade" placeholder="Maximum Grade"/>
+            <input type="text" id="new_tolerance" placeholder="Tolerance" value="0.0001"/>
+            <textarea id="new_preprocessing" placeholder="def fun(s,r):"/></textarea>
+          </form>
+          <button id="create_question">Create</button>
+        </div>
+      </div>
+
+    <!-- SAVE GRADES MODAL -->
+    <label for="grades-modal-control" class="button" id="save_grades">Save Grades</label>
+    <input type="checkbox" id="grades-modal-control" class="modal">
+      <div>
+        <div class="card large">
+          <label for="grades-modal-control" style="display: none;" class="modal-close"></label>
+          <h3>Saving grades and creating feedback files ...</h3>
+          <div class="spinner" style="margin: 20px auto;"></div>
+        </div>
+      </div>
+
+
+    <!-- CREATING BATCHES MODAL -->
+    <label for="creating-batches-modal-control" style="display: none;"></label>
+    <input type="checkbox" id="creating-batches-modal-control" class="modal">
+      <div>
+        <div class="card large">
+          <label for="creating-batches-modal-control" style="display: none;" class="modal-close"></label>
+          <h3>Creating batches ...</h3>
+          <div class="spinner" style="margin: 20px auto;"></div>
+        </div>
+      </div>
+
+  </section>
+
+  <!-- ########## BATCHES VIEW ########## -->
+  <section id="batches" style="display: none;">
+
+    <table style="max-height: none;">
+      <thead>
+        <tr>
+          <th>Batch ID</th>
+          <th>Datatype</th>
+          <th>Count</th>
+          <th>Grade</th>
+          <th>Comments</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- BATCHES -->
+
+      </tbody>
+    </table>
+
+  </section>
+
+  <!-- ########## GRADING VIEW ########## -->
+  <section id="grading" style="display: none;">
+
+  </section>
+
+  <!-- ########## FOOTER ########## -->
+  <br><br>
+
+</div>
+
+<!-- ########## TEMPLATES ########## -->
+
+<script id="assignment" type="text/template">
+  <td><%= name %></td>
+  <td><%= total_submissions %></td>
+  <td><%= total_questions %></td>
+  <td><%= total_points %></td>
+  <td>
+    <button class="grade">Grade</button>
+    <button class="delete">Delete</button>
+  </td>
+</script>
+
+<script id="question" type="text/template">
+  <td><%= name %></td>
+  <td><%= var_name %></td>
+  <td><%= max_grade %></td>
+  <td><%= tolerance %></td>
+  <td><%= total_batches %></td>
+  <td>
+    <button class="create_batches">Make Batches</button>
+    <button class="grade_batches">Grade</button>
+    <button class="delete_question">Delete</button>
+  </td>
+</script>
+
+<script id="batch" type="text/template">
+  <td><%= id %></td>
+  <td><%= datatype %></td>
+  <td><%= total_batch_responses %> of <%= total_question_responses %></td>
+  <td><%= grade %></td>
+  <td><%= comments %></td>
+  <td>
+    <button class="grade_batch">Grade</button>
+  </td>
+</script>
+
+<script id="grade" type="text/template">
+
+  <table class="horizontal">
+    <thead>
+      <tr>
+        <th>Batch ID</th>
+        <th>Datatype</th>
+        <th>Count</th>
+        <th>Grade</th>
+        <th>Comments</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><%= id %></td>
+        <td><%= datatype %></td>
+        <td><%= total_batch_responses %> of <%= total_question_responses %></td>
+        <td><%= grade %></td>
+        <td><%= comments %> &nbsp;</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <br>
+
+<section>
+  <div class="card fluid">
+    <pre><%= data %></pre>
+  </div>
+</section>
+
+  <br>
+
+  <form class="input-group fluid vertical">
+    <label for="batch-grade">Grade</label>
+    <input type="text" id="batch-grade" value="<%= grade %>"/>
+    <label for="batch-comments">Comments</label>
+    <input type="text" id="batch-comments" value="<%= comments %>"/>
+    <button id="submit-batch">Submit</button>
+    <button id="next-batch">Next</button>
+    <button id="previous-batch">Previous</button>
+  </form>
+
+</script>
+
+<!-- ########## JAVASCRIPT ########## -->
+
+<script src="{{ url_for('static', filename='js/lib/jquery.js') }}"></script>
+<script src="{{ url_for('static', filename='js/lib/underscore.js') }}"></script>
+<script src="{{ url_for('static', filename='js/lib/backbone.js') }}"></script>
+
+<script src="{{ url_for('static', filename='js/models/assignment.js') }}"></script>
+<script src="{{ url_for('static', filename='js/models/question.js') }}"></script>
+<script src="{{ url_for('static', filename='js/models/batch.js') }}"></script>
+
+<script src="{{ url_for('static', filename='js/collections/assignments.js') }}"></script>
+<script src="{{ url_for('static', filename='js/collections/questions.js') }}"></script>
+<script src="{{ url_for('static', filename='js/collections/batches.js') }}"></script>
+
+<script src="{{ url_for('static', filename='js/views/assignment.js') }}"></script>
+<script src="{{ url_for('static', filename='js/views/assignments.js') }}"></script>
+<script src="{{ url_for('static', filename='js/views/question.js') }}"></script>
+<script src="{{ url_for('static', filename='js/views/questions.js') }}"></script>
+<script src="{{ url_for('static', filename='js/views/batch.js') }}"></script>
+<script src="{{ url_for('static', filename='js/views/batches.js') }}"></script>
+<script src="{{ url_for('static', filename='js/views/grading.js') }}"></script>
+
+<script src="{{ url_for('static', filename='js/router.js') }}"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+
+
+</body>
+
+</html>

@@ -1,0 +1,1 @@
+When MATLAB is remembering words they will often be higlighted in purple

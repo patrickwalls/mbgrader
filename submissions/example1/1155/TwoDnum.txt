@@ -1,0 +1,1 @@
+there are 44 free variables, since there are only 6 leading entries

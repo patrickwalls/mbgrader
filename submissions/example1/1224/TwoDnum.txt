@@ -1,0 +1,1 @@
+there are 43(50-7pivots) free variables in this system of linear equations
