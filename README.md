@@ -22,6 +22,13 @@ Setup the database:
 python init_db.py
 ```
 
+Setup the Flask environment variable and run:
+
+```
+export FLASK_APP=app
+flask run
+```
+
 Open a browser and navigate to `http://127.0.0.1:5000/`. Create a new assignment by entering the corresponding folder name locating in the `submissions` folder. There is an example assignment called `example1`. mbgrader assumes the folder structure:
 
 ```
