@@ -4,7 +4,7 @@ $(function() {
 
   app.AppAssignments = new app.Assignments();
   app.AppAssignmentsView = new app.AssignmentsView({collection: app.AppAssignments});
-  app.AppAssignments.fetch();
+  app.AppAssignments.fetch({async: false});
 
   app.AppQuestions = new app.Questions();
   app.AppQuestionsView = new app.QuestionsView({collection: app.AppQuestions});

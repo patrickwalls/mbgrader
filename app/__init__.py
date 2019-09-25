@@ -5,6 +5,7 @@ import os
 from glob import glob
 import numpy as np
 import pandas as pd
+import importlib
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
@@ -51,6 +52,12 @@ def grades(assignment_id):
     assignment.save_grades()
     return ('',200)
 
+@app.route('/assignments/<int:assignment_id>/vars')
+def vars(assignment_id):
+    responses = Response.query.filter_by(assignment_id=assignment_id).all()
+    vars = sorted(list(set([response.var_name.lower() for response in responses])))
+    return jsonify({'vars': vars})
+
 @app.route('/assignments/<int:assignment_id>/questions', methods=['GET','POST'])
 def questions(assignment_id):
     if request.method == 'GET':
@@ -58,7 +65,8 @@ def questions(assignment_id):
         return jsonify([question.to_dict() for question in questions])
     elif request.method == 'POST':
         question = Question(name=request.json['name'],
-                            var_name=request.json['var_name'],
+                            var_name=request.json['var_name'].lower(),
+                            alt_var_name=request.json['alt_var_name'].lower(),
                             max_grade=request.json['max_grade'],
                             tolerance=request.json['tolerance'],
                             preprocessing=request.json['preprocessing'],
@@ -130,6 +138,7 @@ class Assignment(db.Model):
             response_files = [os.path.basename(r) for r in glob(os.path.join('submissions',self.name,str(student_id),'*'))]
             for response_file in response_files:
                 var_name, extension = response_file.split('.')
+                var_name = var_name.lower()
                 datatype = Datatype.query.filter_by(extension=extension).first()
                 response = Response(assignment_id=self.id,student_id=student_id,datatype_id=datatype.id,var_name=var_name)
                 db.session.add(response)
@@ -159,24 +168,26 @@ class Assignment(db.Model):
         q3 = q2.join('response','student').options(db.joinedload('response').joinedload('student'))
 
         df = pd.read_sql(q3.statement,db.engine)
-        columns = ['student_id','grade','comments','name']
+        columns = ['student_id','grade','comments','name','status']
         df = df[columns]
-        df.columns = ['Student ID','Grade','Comments','Question']
+        df.columns = ['Student ID','Grade','Comments','Question','Status']
 
         grades = df.pivot(index='Student ID',columns='Question',values='Grade').fillna(0)
         grades['Total'] = grades.sum(axis=1)
         grades.to_csv(os.path.join(assignment_grades_folder,self.name) + '.csv')
 
-        comments = df.pivot(index='Student ID',columns='Question',values='Comments').fillna('Did not find a response for this question.')
-        for student in comments.index:
+        comments = df.pivot(index='Student ID',columns='Question',values='Comments').fillna('')
+        statuses = df.pivot(index='Student ID',columns='Question',values='Status').fillna('Did not find a response for this question.')
+        for student in grades.index:
             filename = os.path.join(assignment_feedback_folder,str(student) + '.txt')
             f = open(filename,'w')
             feedback = ''
             for question in comments.columns:
                 comment = comments.loc[student,question]
+                status = statuses.loc[student,question]
                 grade = grades.loc[student,question]
                 max_grade = Question.query.filter_by(assignment_id=self.id).filter_by(name=question).first().max_grade
-                feedback += '\n{0}\nGrade: {1}/{2}\nComments: {3}\n'.format(question,grade,float(max_grade),comment)
+                feedback += '\n{0}\nGrade: {1}/{2}\nStatus: {3}\nComments: {4}\n'.format(question,grade,float(max_grade),status,comment)
             f.write(feedback)
             f.close()
 
@@ -193,12 +204,22 @@ class Question(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), nullable=False)
     var_name = db.Column(db.String(80), nullable=False)
+    alt_var_name = db.Column(db.String(80), nullable=False)
     max_grade = db.Column(db.Integer, nullable=False)
     tolerance = db.Column(db.Float, default=0.001)
     preprocessing = db.Column(db.String(280))
 
     assignment_id = db.Column(db.Integer, db.ForeignKey('assignment.id'), nullable=False)
     batches = db.relationship('Batch', backref='question', lazy=True, cascade='all,delete')
+
+    def get_preprocessing(self):
+        f = open('preprocessing_module.py','w')
+        f.write(self.preprocessing)
+        f.close()
+        import preprocessing_module
+        importlib.reload(preprocessing_module)
+        os.remove('preprocessing_module.py')
+        return preprocessing_module.fun
 
     def delete_batches(self):
         for batch in self.batches:
@@ -207,14 +228,29 @@ class Question(db.Model):
 
     def create_batches(self):
         if self.preprocessing:
-            f = open(os.path.join('app','preprocessing.py'),'w')
-            f.write(self.preprocessing)
-            f.close()
-            from app.preprocessing import fun
+            fun = self.get_preprocessing()
         else:
             fun = None
-        responses = Response.query.filter_by(assignment_id=self.assignment_id,var_name=self.var_name).all()
-        for response in responses:
+        submissions = Submission.query.filter_by(assignment_id=self.assignment_id)
+        for submission in submissions:
+            status = 'Response loaded successfully.'
+            response = Response.query.filter_by(assignment_id=self.assignment_id,
+                                                student_id=submission.student_id,
+                                                var_name=self.var_name).first()
+
+            if not response:
+                alt_vars = self.alt_var_name.lower().split(',')
+                for alt_var in alt_vars:
+                    response = Response.query.filter_by(assignment_id=self.assignment_id,
+                                                        student_id=submission.student_id,
+                                                        var_name=alt_var).first()
+                    if response:
+                        status = 'Response loaded successfully. But variable name is misspelled!'
+                        break
+
+            if not response:
+                continue
+
             batched = False
             for batch in self.batches:
                 if batch.compare(response,preprocessing=fun):
@@ -225,10 +261,9 @@ class Question(db.Model):
                 this_batch = Batch(grade=0,comments='',datatype_id=response.datatype_id,question_id=self.id)
                 db.session.add(this_batch)
                 db.session.commit()
-            batch_response = BatchResponse(response_id=response.id,batch_id=this_batch.id)
+            batch_response = BatchResponse(response_id=response.id,batch_id=this_batch.id,status=status)
             db.session.add(batch_response)
             db.session.commit()
-        os.remove(os.path.join('app','preprocessing.py'))
 
     def total_batches(self):
         return len(self.batches)
@@ -240,6 +275,7 @@ class Question(db.Model):
         return {'id': self.id,
                 'name': self.name,
                 'var_name': self.var_name,
+                'alt_var_name': self.alt_var_name,
                 'max_grade': self.max_grade,
                 'tolerance': self.tolerance,
                 'assignment_id': self.assignment_id,
@@ -250,6 +286,7 @@ class Question(db.Model):
 class BatchResponse(db.Model):
     response_id = db.Column(db.Integer, db.ForeignKey('response.id'), primary_key=True)
     batch_id = db.Column(db.Integer, db.ForeignKey('batch.id'), primary_key=True)
+    status = db.Column(db.String(140))
 
     response = db.relationship('Response', backref='batch_responses', lazy=True)
 
@@ -294,17 +331,13 @@ class Batch(db.Model):
     def to_dict(self):
         datatype = Datatype.query.get(self.datatype_id).name
         if self.question.preprocessing:
-            f = open(os.path.join('app','preprocessing.py'),'w')
-            f.write(self.question.preprocessing)
-            f.close()
-            from app.preprocessing import fun
+            fun = self.question.get_preprocessing()
             try:
                 data = fun(self.batch_responses[0].response.student_id,self.get_data())
             except:
                 data = self.get_data()
         else:
             data = self.get_data()
-        os.remove(os.path.join('app','preprocessing.py'))
         return {'id': self.id,
                 'grade': self.grade,
                 'comments': self.comments,

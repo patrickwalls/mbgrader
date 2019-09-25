@@ -27,6 +27,7 @@ app.Router = Backbone.Router.extend({
     app.AppGradingView.$el.hide();
 
     app.AppQuestions.url = 'assignments/' + assignment_id + '/questions';
+    app.AppQuestions.assignment_id = assignment_id;
     app.AppQuestions.fetch({
       reset: true,
       success: function() {

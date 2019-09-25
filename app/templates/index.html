@@ -81,6 +81,7 @@
         <tr>
           <th>Question</th>
           <th>Variable Name</th>
+          <th>Other Names</th>
           <th>Maximum Grade</th>
           <th>Tolerance</th>
           <th>Batches</th>
@@ -103,6 +104,7 @@
           <form class="input-group vertical">
             <input type="text" id="new_question_name" placeholder="Question Name"/>
             <input type="text" id="new_var_name" placeholder="Variable Name"/>
+            <input type="text" id="new_alt_var_name" placeholder="Other Variable Names"/>
             <input type="text" id="new_max_grade" placeholder="Maximum Grade"/>
             <input type="text" id="new_tolerance" placeholder="Tolerance" value="0.0001"/>
             <textarea id="new_preprocessing" placeholder="def fun(s,r):"/></textarea>
@@ -122,6 +124,18 @@
         </div>
       </div>
 
+    <!-- FIND VARS MODAL -->
+    <label for="vars-modal-control" class="button" id="get_vars">Find Variables</label>
+    <input type="checkbox" id="vars-modal-control" class="modal">
+      <div>
+        <div class="card large">
+          <label for="vars-modal-control" class="modal-close"></label>
+          <h3>Variables ...</h3>
+          <p id="vars">
+            <!-- LIST VARS -->
+          </p>
+        </div>
+      </div>
 
     <!-- CREATING BATCHES MODAL -->
     <label for="creating-batches-modal-control" style="display: none;"></label>
@@ -184,11 +198,12 @@
 <script id="question" type="text/template">
   <td><%= name %></td>
   <td><%= var_name %></td>
+  <td><%= alt_var_name %></td>
   <td><%= max_grade %></td>
   <td><%= tolerance %></td>
   <td><%= total_batches %></td>
   <td>
-    <button class="create_batches">Make Batches</button>
+    <button class="create_batches">Batch!</button>
     <button class="grade_batches">Grade</button>
     <button class="delete_question">Delete</button>
   </td>

@@ -18,12 +18,14 @@ app.QuestionsView = Backbone.View.extend({
 
   events: {
     'click #create_question': 'createQuestion',
-    'click #save_grades': 'saveGrades'
+    'click #save_grades': 'saveGrades',
+    'click #get_vars': 'getVars'
   },
 
   createQuestion: function() {
     var name = this.$('#new_question_name').val();
     var var_name = this.$('#new_var_name').val();
+    var alt_var_name = this.$('#new_alt_var_name').val();
     var max_grade = this.$('#new_max_grade').val();
     var tolerance = this.$('#new_tolerance').val();
     var preprocessing = this.$('#new_preprocessing').val();
@@ -31,6 +33,7 @@ app.QuestionsView = Backbone.View.extend({
     var question = this.collection.create({
       'name': name,
       'var_name': var_name,
+      'alt_var_name': alt_var_name,
       'max_grade': max_grade,
       'tolerance': tolerance,
       'preprocessing': preprocessing,
@@ -41,6 +44,7 @@ app.QuestionsView = Backbone.View.extend({
 
     this.$('#new_question_name').val('');
     this.$('#new_var_name').val('');
+    this.$('#new_alt_var_name').val('');
     this.$('#new_max_grade').val('');
     this.$('#new_tolerance').val('');
     this.$('#new_preprocessing').val('');
@@ -49,10 +53,17 @@ app.QuestionsView = Backbone.View.extend({
   },
 
   saveGrades: function() {
-    var url = 'assignments/' + this.collection.models[0].get('assignment_id') + '/grades';
+    var url = 'assignments/' + this.collection.assignment_id + '/grades';
     $.get(url, function() {
         $('#grades-modal-control').trigger('click');
       });
+  },
+
+  getVars: function() {
+    var url = 'assignments/' + this.collection.assignment_id + '/vars';
+    $.get(url, function(data) {
+      $('#vars').html(data.vars.join('<br>'));
+    });
   }
 
 });

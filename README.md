@@ -1,6 +1,6 @@
 # mbgrader
 
-mbgrader (**m**ath **b**atch **grader**) is a custom web application for batch grading MATLAB assignments.
+mbgrader (**m**ath **b**atch **grader**) is a custom web application for batch grading assignments where students submit numbers and matrices as `.csv` files, or text in `.txt` files.
 
 ## Requirements
 
@@ -44,4 +44,27 @@ submissions/
             var3.txt
 ```
 
-Create a new question and enter a preprocessing function if necessary.
+Create a new question and enter a preprocessing function if necessary. Requirements for the preprocessing function are:
+
+* Function must be named `fun`.
+* Input parameters:
+  * `s` is the student number: `int`
+  * `r` is the response: `str`, `np.float64`, or `np.ndarray`
+* Return value *must* be the same type as the response.
+
+For example, the preprocessing function for the question "What is your student number?":
+
+```python
+import numpy as np
+
+def fun(s,r):
+    if isinstance(r,str):
+        return "text"
+    elif isinstance(r,np.ndarray):
+        return np.array([0,0])
+    else:
+        if abs(r - s) > 0:
+            return np.float64(1)
+        else:
+            return np.float64(0)
+```
