@@ -363,9 +363,22 @@ class Response(db.Model):
         dtype = self.datatype.name
         filename = self.get_fullfile()
         if dtype == 'numeric':
-            data = np.loadtxt(filename,delimiter=',',ndmin=2)
+            f = open(filename,'r')
+            data = f.read()
+            f.close()
+            if 'i' in data:
+                data = data.replace('i','j')
+                dtype = complex
+            else:
+                dtype = float
+            tmp = os.path.join('app','tmp.txt')
+            file = open(tmp,'w')
+            file.write(data)
+            file.close()
+            data = np.loadtxt(tmp,delimiter=',',ndmin=2,dtype=dtype)
             if data.size == 1:
                 data = data.flat[0]
+            os.remove(tmp)
         else:
             f = open(filename)
             data = f.read()
