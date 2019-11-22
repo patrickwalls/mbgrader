@@ -19,7 +19,8 @@ app.QuestionsView = Backbone.View.extend({
   events: {
     'click #create_question': 'createQuestion',
     'click #save_grades': 'saveGrades',
-    'click #get_vars': 'getVars'
+    'click #get_vars': 'getVars',
+    'click #create_response': 'createResponse'
   },
 
   createQuestion: function() {
@@ -64,6 +65,25 @@ app.QuestionsView = Backbone.View.extend({
     $.get(url, function(data) {
       $('#vars').html(data.vars.join('<br>'));
     });
+  },
+
+  createResponse: function() {
+    var name = this.$('#new_response_name').val();
+    var vars = this.$('#new_response_vars').val();
+    var expression = this.$('#new_response_expression').val();
+    var extension = this.$('#new_response_extension').val();
+    var data = {'name': name, 'vars': vars, 'expression': expression, 'extension': extension};
+    var url = 'assignments/' + this.collection.assignment_id + '/response';
+    $('#response-modal-close').trigger('click');
+    $('#creating-responses-modal-control').trigger('click');
+    $.post(url,data, function() {
+        $('#creating-responses-modal-control').trigger('click');
+      });
+
+    this.$('#new_response_name').val('');
+    this.$('#new_response_vars').val('');
+    this.$('#new_response_expression').val('');
+    this.$('#new_response_exstension').val('');
   }
 
 });

@@ -89,6 +89,16 @@ def question(assignment_id,question_id):
         else:
             return ('',204)
 
+@app.route('/assignments/<int:assignment_id>/response', methods=['POST'])
+def create_response(assignment_id):
+    var_name = request.form['name']
+    vars = request.form['vars'].split(',')
+    expression = request.form['expression']
+    extension = request.form['extension']
+    assignment = Assignment.query.get_or_404(assignment_id)
+    assignment.create_response(var_name,vars,expression,extension)
+    return ('',200)
+
 @app.route('/assignments/<int:assignment_id>/questions/<int:question_id>/batches', methods=['GET'])
 def batch(assignment_id,question_id):
     create = request.args.get('create')
@@ -144,6 +154,36 @@ class Assignment(db.Model):
                 db.session.add(response)
             db.session.commit()
 
+    def create_response(self,var_name,vars,expression,extension):
+        fun = eval(expression)
+        for submission in self.submissions:
+            student_id = submission.student_id
+            filename = os.path.join('submissions',self.name,str(student_id),var_name + '.' + extension)
+            student_responses = []
+            for var in [v.lower() for v in vars]:
+                response = Response.query.filter_by(assignment_id=self.id,student_id=student_id,var_name=var).first()
+                if response:
+                    student_responses.append(response.get_data())
+                else:
+                    student_responses.append(None)
+            try:
+                value = fun(student_responses)
+            except:
+                text_datatype = Datatype.query.filter_by(extension='txt').first()
+                filename = os.path.join('submissions',self.name,str(student_id),var_name + '.txt')
+                f = open(filename,'w')
+                f.write('Error')
+                f.close()
+                new_response = Response(assignment_id=self.id,student_id=student_id,datatype_id=text_datatype.id,var_name=var_name.lower())
+                db.session.add(new_response)
+                db.session.commit()
+                continue
+            np.savetxt(filename,value,fmt='%.5f',delimiter=',')
+            this_datatype = Datatype.query.filter_by(extension=extension).first()
+            new_response = Response(assignment_id=self.id,student_id=student_id,datatype_id=this_datatype.id,var_name=var_name.lower())
+            db.session.add(new_response)
+            db.session.commit()
+
     def total_points(self):
         points = [question.max_grade for question in self.questions]
         return sum(points)
@@ -172,12 +212,23 @@ class Assignment(db.Model):
         df = df[columns]
         df.columns = ['Student ID','Grade','Comments','Question','Status']
 
+        q4 = Submission.query.filter_by(assignment_id=self.id)
+        submissions = pd.read_sql(q4.statement,db.engine)
+        submissions = submissions[['student_id']]
+        submissions.columns = ['Student ID']
+
         grades = df.pivot(index='Student ID',columns='Question',values='Grade').fillna(0)
         grades['Total'] = grades.sum(axis=1)
+
+        grades = pd.merge(grades,submissions,left_index=True,right_on='Student ID',how='outer').fillna(0).set_index('Student ID')
         grades.to_csv(os.path.join(assignment_grades_folder,self.name) + '.csv')
 
         comments = df.pivot(index='Student ID',columns='Question',values='Comments').fillna('')
+        comments = pd.merge(comments,submissions,left_index=True,right_on='Student ID',how='outer').fillna('').set_index('Student ID')
+
         statuses = df.pivot(index='Student ID',columns='Question',values='Status').fillna('Did not find a response for this question.')
+        statuses = pd.merge(statuses,submissions,left_index=True,right_on='Student ID',how='outer').fillna('Did not find a response for this question.').set_index('Student ID')
+
         for student in grades.index:
             filename = os.path.join(assignment_feedback_folder,str(student) + '.txt')
             f = open(filename,'w')

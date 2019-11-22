@@ -137,6 +137,34 @@
         </div>
       </div>
 
+    <!-- CREATE RESPONSE MODAL -->
+    <label for="response-modal-control" class="button">Create Response</label>
+    <input type="checkbox" id="response-modal-control" class="modal">
+      <div>
+        <div class="card large" style="max-height: none">
+          <label for="response-modal-control" id="response-modal-close" class="modal-close"></label>
+          <h3 class="section">Create Response</h3>
+          <form class="input-group vertical">
+            <input type="text" id="new_response_name" placeholder="Response Variable Name"/>
+            <input type="text" id="new_response_vars" placeholder="Variables in Expression ('E1,E2,E3')"/>
+            <textarea id="new_response_expression" placeholder="lambda v: v[0] + v[1] - v[2]"/></textarea>
+            <input type="text" id="new_response_extension" placeholder="Extension ('csv' or 'txt' or 'sym')"/>
+          </form>
+          <button id="create_response">Create</button>
+        </div>
+      </div>
+
+    <!-- CREATING RESPONSES MODAL -->
+    <label for="creating-responses-modal-control" style="display: none;"></label>
+    <input type="checkbox" id="creating-responses-modal-control" class="modal">
+      <div>
+        <div class="card large">
+          <label for="creating-responses-modal-control" style="display: none;" class="modal-close"></label>
+          <h3>Creating responses ...</h3>
+          <div class="spinner" style="margin: 20px auto;"></div>
+        </div>
+      </div>
+
     <!-- CREATING BATCHES MODAL -->
     <label for="creating-batches-modal-control" style="display: none;"></label>
     <input type="checkbox" id="creating-batches-modal-control" class="modal">

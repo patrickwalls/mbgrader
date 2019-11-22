@@ -68,3 +68,10 @@ def fun(s,r):
         else:
             return np.float64(0)
 ```
+
+Create a new response from student responses by entering:
+
+* New response variable name
+* Comma-separated list of variables used to compute new response
+* `lambda` to compute new variable where input is a list and entries are the selected variables
+* Extension to indicate datatype
