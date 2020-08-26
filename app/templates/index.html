@@ -274,8 +274,10 @@
   <br>
 
 <section>
-  <div class="card fluid">
-    <pre><%= data %></pre>
+  <div class="card fluid" id="data">
+    <% if (datatype != 'figure') { %>
+        <pre><%= data %></pre>
+    <% } %>
   </div>
 </section>
 
@@ -298,6 +300,7 @@
 <script src="{{ url_for('static', filename='js/lib/jquery.js') }}"></script>
 <script src="{{ url_for('static', filename='js/lib/underscore.js') }}"></script>
 <script src="{{ url_for('static', filename='js/lib/backbone.js') }}"></script>
+<script src="{{ url_for('static', filename='js/lib/plotly.js') }}"></script>
 
 <script src="{{ url_for('static', filename='js/models/assignment.js') }}"></script>
 <script src="{{ url_for('static', filename='js/models/question.js') }}"></script>

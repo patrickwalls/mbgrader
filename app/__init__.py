@@ -6,6 +6,7 @@ from glob import glob
 import numpy as np
 import pandas as pd
 import importlib
+import json
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
@@ -147,7 +148,8 @@ class Assignment(db.Model):
             db.session.add(submission)
             response_files = [os.path.basename(r) for r in glob(os.path.join('submissions',self.name,str(student_id),'*'))]
             for response_file in response_files:
-                var_name, extension = response_file.split('.')
+                response_file_split = response_file.split('.')
+                var_name, extension = response_file_split[0], response_file_split[-1]
                 var_name = var_name.lower()
                 datatype = Datatype.query.filter_by(extension=extension).first()
                 response = Response(assignment_id=self.id,student_id=student_id,datatype_id=datatype.id,var_name=var_name)
@@ -367,6 +369,22 @@ class Batch(db.Model):
             return batch_data == response_data
         elif dtype == 'numeric':
             return np.array_equal(batch_data.shape,response_data.shape) and np.allclose(batch_data,response_data,atol=self.question.tolerance)
+        elif dtype == 'figure':
+            diffs = np.zeros([len(batch_data),len(response_data)])
+            for sss in range(0, len(batch_data)):
+                for aaa in range(0, len(response_data)):
+                    if response_data[aaa].size > 2 and batch_data[sss].size > 2:
+                        yinterp = np.interp(response_data[aaa][:,0], batch_data[sss][:,0], batch_data[sss][:,1]);
+                        diffs[sss,aaa] = np.max(np.abs(yinterp-response_data[aaa][:,1]))
+                    elif response_data[aaa].size == 2 and batch_data[sss].size == 2:
+                        diffs[sss,aaa] = np.max(np.abs(response_data[aaa]-batch_data[sss]))
+                    else:
+                        diffs[sss,aaa] = 999
+            diffs = diffs < self.question.tolerance
+            if np.all(diffs.sum(axis=0)) and np.all(diffs.sum(axis=1)):
+                return True
+            else:
+                return False
         else:
             return False
 
@@ -389,6 +407,15 @@ class Batch(db.Model):
                 data = self.get_data()
         else:
             data = self.get_data()
+        if datatype == 'figure':
+            dataJSON = []
+            for line in data:
+                if line.size == 2:
+                    dataJSON.append(line.tolist())
+                else:
+                    dataJSON.append({'x': line[:,0].tolist(),'y': line[:,1].tolist()})
+        else:
+            dataJSON = str(data)
         return {'id': self.id,
                 'grade': self.grade,
                 'comments': self.comments,
@@ -397,7 +424,7 @@ class Batch(db.Model):
                 'datatype': datatype,
                 'total_batch_responses': self.total_responses(),
                 'total_question_responses': self.question.total_responses(),
-                'data': str(data)}
+                'data': dataJSON}
 
 class Response(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -430,6 +457,13 @@ class Response(db.Model):
             if data.size == 1:
                 data = data.flat[0]
             os.remove(tmp)
+        elif dtype == 'figure':
+            f = open(filename,'r')
+            data = f.read()
+            f.close()
+            data = json.loads(data)
+            Lines = data['Lines']
+            data = [np.array(Lines[n],dtype=float) for n in range(0,len(Lines))]
         else:
             f = open(filename)
             data = f.read()

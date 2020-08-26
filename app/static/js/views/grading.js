@@ -12,6 +12,10 @@ app.GradingView = Backbone.View.extend({
 
   render: function() {
     this.$el.html(this.template(this.model.attributes));
+    if (this.model.get('datatype') == 'figure') {
+      var lines = this.model.get('data');
+      Plotly.newPlot('data', lines);
+    };
     return this;
   },
 
