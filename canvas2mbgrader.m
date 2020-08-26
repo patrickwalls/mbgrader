@@ -11,13 +11,13 @@ end
 mkdir(mbgrader_submissions);
 
 % Get path to Canvas classlist and read Canvas IDs and Studend Numbers
-disp('Classlist format (Canvas ID, Student Number) with no header.')
 classlist_filename = input('Enter Canvas classlist filename [./classlist.csv]: ','s');
 if strcmp(classlist_filename,'')
     classlist_filename = 'classlist.csv';
 end
 classlist = readmatrix(classlist_filename);
-classlist = classlist(2:end-1,[2 5]);
+classlist = classlist(2:end,[2 5]);
+fprintf('Found %d students in the classlist.\n',length(classlist));
 
 % Enter variable names to ignore (such as data provided with assignment)
 ignore_vars = input('Enter variable names to ignore (as comma-separated list with no spaces such as ans,varA,varB): ','s');
