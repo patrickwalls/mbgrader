@@ -75,3 +75,7 @@ Create a new response from student responses by entering:
 * Comma-separated list of variables used to compute new response
 * `lambda` to compute new variable where input is a list and entries are the selected variables
 * Extension to indicate datatype
+
+## Canvas
+
+The script `canvas2mbgrader.m` reads MATLAB `.mat` and `.fig` files from the `canvas` folder and saves the data to the `submissions` folder. The script requires a file `canvasIdstudentID.csv` with Canvas IDs in the first column and Student IDs in the second column.

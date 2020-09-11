@@ -197,8 +197,8 @@ class Assignment(db.Model):
         return len(self.questions)
 
     def save_grades(self):
-        assignment_grades_folder = os.path.join('grades',self.name)
-        os.makedirs(assignment_grades_folder,exist_ok=True)
+        grades_folder = 'grades'
+        os.makedirs(grades_folder,exist_ok=True)
         assignment_feedback_folder = os.path.join('feedback',self.name)
         os.makedirs(assignment_feedback_folder,exist_ok=True)
         old_feedback = glob(os.path.join(assignment_feedback_folder,'*.txt'))
@@ -223,7 +223,7 @@ class Assignment(db.Model):
         grades['Total'] = grades.sum(axis=1)
 
         grades = pd.merge(grades,submissions,left_index=True,right_on='Student ID',how='outer').fillna(0).set_index('Student ID')
-        grades.to_csv(os.path.join(assignment_grades_folder,self.name) + '.csv')
+        grades.to_csv(os.path.join(grades_folder,self.name) + '.csv')
 
         comments = df.pivot(index='Student ID',columns='Question',values='Comments').fillna('')
         comments = pd.merge(comments,submissions,left_index=True,right_on='Student ID',how='outer').fillna('').set_index('Student ID')

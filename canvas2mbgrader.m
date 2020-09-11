@@ -1,23 +1,30 @@
 %%%%% SETUP %%%%%
 
+% Read Canvas IDs and Student Numbers
+if isfile('canvasIDstudentID.csv')
+    classlist = readmatrix('canvasIDstudentID.csv');
+else
+    disp('File canvasIDstudentID.csv not found.')
+    disp('Create csv file with Canvas IDs in first column and Student IDs in second column (no header).')
+    disp('Save as canvasIDstudentID.csv in current directory.')
+    return
+end
+fprintf('Found %d students in the classlist.\n',length(classlist));
+
 % Get path to Canvas assignment downloads folder
 % and create mbgrader submissions folder
 assignment_folder = input('Enter assignment folder [canvas/{*}]: ','s');
 canvas_submissions = fullfile('canvas',assignment_folder);
+if ~isdir(canvas_submissions)
+    disp(['Cannot find assignment: ', assignment_folder])
+    clear assignment_folder canvas_submissions classlist
+    return
+end
 mbgrader_submissions = fullfile('submissions',assignment_folder);
 if isfolder(mbgrader_submissions)
     rmdir(mbgrader_submissions,'s');
 end
 mkdir(mbgrader_submissions);
-
-% Get path to Canvas classlist and read Canvas IDs and Studend Numbers
-classlist_filename = input('Enter Canvas classlist filename [./classlist.csv]: ','s');
-if strcmp(classlist_filename,'')
-    classlist_filename = 'classlist.csv';
-end
-classlist = readmatrix(classlist_filename);
-classlist = classlist(2:end,[2 5]);
-fprintf('Found %d students in the classlist.\n',length(classlist));
 
 % Enter variable names to ignore (such as data provided with assignment)
 ignore_vars = input('Enter variable names to ignore (as comma-separated list with no spaces such as ans,varA,varB): ','s');
@@ -196,7 +203,7 @@ else
 end
 
 [~,name,ext] = fileparts(filename_with_extension);
-name = split(name,{' ','-','(',')'});
+name = split(name,{' ','-','(',')','.'});
 name = name{1};
 real_filename = [name,ext];
 
