@@ -365,7 +365,7 @@ class Batch(db.Model):
                 print('Preprocessing failed ... ')
                 pass
         dtype = self.datatype.name
-        if dtype in ['text','symbolic']:
+        if dtype in ['text','symbolic','logical']:
             return batch_data == response_data
         elif dtype == 'numeric':
             return np.array_equal(batch_data.shape,response_data.shape) and np.allclose(batch_data,response_data,atol=self.question.tolerance)
@@ -440,7 +440,7 @@ class Response(db.Model):
     def get_data(self):
         dtype = self.datatype.name
         filename = self.get_fullfile()
-        if dtype == 'numeric':
+        if dtype in ['numeric','logical']:
             f = open(filename,'r')
             data = f.read()
             f.close()

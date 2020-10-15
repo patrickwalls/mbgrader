@@ -1,4 +1,6 @@
+%%%%%%%%%%%%%%%%%
 %%%%% SETUP %%%%%
+%%%%%%%%%%%%%%%%%
 
 % Read Canvas IDs and Student Numbers
 if isfile('canvasIDstudentID.csv')
@@ -113,6 +115,9 @@ for i=1:length(mat_files)
         elseif isa(value,'double')
             target = fullfile(destination,[varname,'.csv']);
             dlmwrite(target,value,'precision',10);
+        elseif isa(value,'logical')
+            target = fullfile(destination,[varname,'.log']);
+            dlmwrite(target,value,'precision',1);
         elseif isa(value,'sym') || isa(value,'symfun')
             target = fullfile(destination,[varname,'.sym']);
             f = fopen(target,'w');
@@ -173,8 +178,20 @@ for i=1:length(fig_files)
     s.YLabel = ax.YLabel.String;
     Lines = findobj(ax,'Type','line');
     s.Lines = cell(1,length(Lines));
+    null_values = false;
     for n=1:length(Lines)
+        if any(isnan(Lines(n).XData)) || any(isnan(Lines(n).YData)) || any(isinf(Lines(n).XData)) || any(isinf(Lines(n).YData))
+            copyfile(fullfile(temp,filename),issues);
+            f = fopen(fullfile(issues,'issues.txt'),'a');
+            fprintf(f,['Null/Inf values in .fig file for Student Number ',student_number,' Canvas ID ',canvas_id,'\n']);
+            fclose(f);
+            null_values = true;
+            break
+        end
         s.Lines{n} = [Lines(n).XData' Lines(n).YData'];
+    end
+    if null_values
+        continue
     end
     output = jsonencode(s);
     [~,name,~] = fileparts(real_filename);

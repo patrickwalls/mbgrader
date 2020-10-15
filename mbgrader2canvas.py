@@ -6,7 +6,7 @@ from shutil import copyfile
 
 assignment_name = input('Enter assignment name: ')
 grades = pd.read_csv(os.path.join('grades',assignment_name + '.csv'))
-classlist = pd.read_csv('classlist.csv',skiprows=[1,2])
+classlist = pd.read_csv('classlist.csv',skiprows=[1])
 columns = [c for c in classlist.columns if c in ['Student','ID','SIS User ID','SIS Login ID','Section','Student Number']]
 classlist = classlist[columns]
 total = grades[['Student ID','Total']]
