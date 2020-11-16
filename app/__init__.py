@@ -374,10 +374,24 @@ class Batch(db.Model):
             for sss in range(0, len(batch_data)):
                 for aaa in range(0, len(response_data)):
                     if response_data[aaa].size > 2 and batch_data[sss].size > 2:
-                        yinterp = np.interp(response_data[aaa][:,0], batch_data[sss][:,0], batch_data[sss][:,1]);
-                        diffs[sss,aaa] = np.max(np.abs(yinterp-response_data[aaa][:,1]))
+                        x_response = response_data[aaa][:,0]
+                        y_response = response_data[aaa][:,1]
+                        x_batch = batch_data[sss][:,0]
+                        y_batch = batch_data[sss][:,1]
+                        L_response = np.sum(np.sqrt(np.diff(x_response)**2 + np.diff(y_response)**2))
+                        L_batch = np.sum(np.sqrt(np.diff(x_batch)**2 + np.diff(y_batch)**2))
+                        #if np.abs(L_response - L_batch)/L_batch > 0.01:
+                        #    diffs[sss,aaa] = 999
+                        #    continue
+                        t_response = np.concatenate([[0],np.cumsum(np.sqrt(np.diff(x_response)**2 + np.diff(y_response)**2))])
+                        t_batch = np.concatenate([[0],np.cumsum(np.sqrt(np.diff(x_batch)**2 + np.diff(y_batch)**2))])
+                        x_interp = np.interp(t_response, t_batch, x_batch)
+                        x_diff = np.max(np.abs(x_interp - x_response))
+                        y_interp = np.interp(t_response, t_batch, y_batch)
+                        y_diff = np.max(np.abs(y_interp - y_response))
+                        diffs[sss,aaa] = np.max([x_diff,y_diff])
                     elif response_data[aaa].size == 2 and batch_data[sss].size == 2:
-                        diffs[sss,aaa] = np.max(np.abs(response_data[aaa]-batch_data[sss]))
+                        diffs[sss,aaa] = np.max(np.abs(response_data[aaa] - batch_data[sss]))
                     else:
                         diffs[sss,aaa] = 999
             diffs = diffs < self.question.tolerance
