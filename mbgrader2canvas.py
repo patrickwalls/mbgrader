@@ -6,11 +6,12 @@ from shutil import copyfile
 
 assignment_name = input('Enter assignment name: ')
 grades = pd.read_csv(os.path.join('grades',assignment_name + '.csv'))
-classlist = pd.read_csv('classlist.csv',skiprows=[1])
+classlist = pd.read_csv('classlist.csv',header=0,skiprows=[1,2])
 columns = [c for c in classlist.columns if c in ['Student','ID','SIS User ID','SIS Login ID','Section','Student Number']]
 classlist = classlist[columns]
 total = grades[['Student ID','Total']]
 upload = pd.merge(classlist,total,how='inner',left_on='Student Number',right_on='Student ID')
+upload.drop(columns='Student ID',inplace=True)
 upload.to_csv(os.path.join('grades',assignment_name + '_upload.csv'),index=False)
 
 feedback_upload = os.path.join('feedback',assignment_name + '_upload')
