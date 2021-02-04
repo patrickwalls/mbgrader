@@ -9,6 +9,8 @@ grades = pd.read_csv(os.path.join('grades',assignment_name + '.csv'))
 classlist = pd.read_csv('classlist.csv',header=0,skiprows=[1,2])
 columns = [c for c in classlist.columns if c in ['Student','ID','SIS User ID','SIS Login ID','Section','Student Number']]
 classlist = classlist[columns]
+classlist.dropna(axis=0,subset=['Student Number'],inplace=True)
+classlist = classlist.astype({'Student Number': np.int64})
 total = grades[['Student ID','Total']]
 upload = pd.merge(classlist,total,how='inner',left_on='Student Number',right_on='Student ID')
 upload.drop(columns='Student ID',inplace=True)
