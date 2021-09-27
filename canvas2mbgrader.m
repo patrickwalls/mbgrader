@@ -94,7 +94,7 @@ for i=1:length(mat_files)
     for i=1:length(vars)
         varname = vars{i};
         value = getfield(S,varname);
-        
+        varname = lower(varname);
         % Ignore the variable called filename and any other user specified
         % variable names to ignore, and skip duplicate variable names
         if strcmp(varname,'filename') || any(strcmp(ignore_vars,varname))
