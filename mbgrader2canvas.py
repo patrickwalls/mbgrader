@@ -1,38 +1,50 @@
-import numpy as np
-import pandas as pd
-import os
+from canvasapi import Canvas
 import glob
-from shutil import copyfile
+import tempfile
+import os
 
-assignment_name = input('Enter assignment name: ')
-grades = pd.read_csv(os.path.join('grades',assignment_name + '.csv'))
-classlist = pd.read_csv('classlist.csv',header=0,skiprows=[1,2])
-columns = [c for c in classlist.columns if c in ['Student','ID','SIS User ID','SIS Login ID','Section','Student Number']]
-classlist = classlist[columns]
-classlist.dropna(axis=0,subset=['Student Number'],inplace=True)
-classlist = classlist.astype({'Student Number': np.int64})
-total = grades[['Student ID','Total']]
-upload = pd.merge(classlist,total,how='inner',left_on='Student Number',right_on='Student ID')
-upload.drop(columns='Student ID',inplace=True)
-upload.to_csv(os.path.join('grades',assignment_name + '_upload.csv'),index=False)
+API_URL = "https://ubc.instructure.com"
+with open("token.txt","r") as f:
+    API_KEY = f.read()
+canvas = Canvas(API_URL, API_KEY)
 
-feedback_upload = os.path.join('feedback',assignment_name + '_upload')
-os.makedirs(feedback_upload,exist_ok=True)
-for old_file in glob.glob(os.path.join(feedback_upload,'*')):
-    os.remove(old_file)
+courseID = int(input("Enter Canvas course ID: "))
+assignmentID = int(input("Enter Canvas assignment ID: "))
+course = canvas.get_course(courseID)
+assignment = course.get_assignment(assignmentID)
+assignment_name = input("Enter assignment name: ")
 
-for i,row in classlist.iterrows():
-    studentID = row['Student Number']
-    if np.isnan(studentID):
+with open("canvasIDstudentID.csv") as f:
+    lines = f.readlines()
+
+studentIDcanvasID = {}
+for line in lines:
+    items = line.split(",")
+    canvasID = int(items[0])
+    studentID = int(items[1])
+    studentIDcanvasID[studentID] = canvasID
+
+with open(os.path.join("grades",assignment_name + ".csv")) as f:
+    lines = f.readlines()
+
+for line in lines[1:]:
+    items = line.split(',')
+    student_id = int(items[0])
+    canvas_id = studentIDcanvasID[student_id]
+    try:
+        submission = assignment.get_submission(canvas_id)
+    except:
+        print('Could not find assignment for {}'.format(canvas_id))
         continue
-    source = os.path.join('feedback',assignment_name,str(int(studentID)) + '.txt')
-    if not os.path.isfile(source):
-        continue
-    canvasID = row['ID']
-    submission = glob.glob(os.path.join('canvas',assignment_name,'*_{}_*.mat'.format(canvasID)))
-    if not submission:
-        submission = glob.glob(os.path.join('canvas',assignment_name,'*_{}_*.fig'.format(canvasID)))
-    if not submission:
-        continue
-    destination = os.path.join(feedback_upload,os.path.basename(submission[0]))
-    copyfile(source,destination)
+    score = float(items[-1])
+    print("Upload grade {} for {} ...".format(score,canvas_id))
+    submission.edit(submission={'posted_grade': score})
+    print("Upload feedback for {} ...".format(canvas_id))
+    f = tempfile.NamedTemporaryFile('w+')
+    f.name = "feedback.txt"
+    source = os.path.join("feedback",assignment_name,"{}.txt".format(student_id))
+    with open(source,'r') as fsource:
+        f.write(fsource.read())
+    f.seek(0)
+    submission.upload_comment(f)
+    f.close()
