@@ -55,6 +55,17 @@ mkdir(issues);
 mat_files = dir(fullfile(temp,'*.mat'));
 fig_files = dir(fullfile(temp,'*.fig'));
 
+% Omit variables defined by the provided file
+provided_filename = input('Enter the name of the file provided with the assignment:', 's');
+try
+    provided = load(fullfile(provided_filename));
+    provided_vars = fieldnames(provided);
+    clear provided provided_filename
+catch
+    display('provided file was not found');
+    return
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%% READ .MAT FILES %%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -91,10 +102,15 @@ for i=1:length(mat_files)
     
     % Load and write each variable to its own file in destination folder
     vars = fieldnames(S);
+    saved_vars = 0;
     for i=1:length(vars)
         varname = vars{i};
+        % ignore variables from the provided file
+        if ismember(varname, provided_vars)
+            continue
+        end
         value = getfield(S,varname);
-        
+        varname = lower(varname);
         % Ignore the variable called filename and any other user specified
         % variable names to ignore, and skip duplicate variable names
         if strcmp(varname,'filename') || any(strcmp(ignore_vars,varname))
@@ -106,6 +122,7 @@ for i=1:length(mat_files)
             continue
         end
 
+        saved_vars = saved_vars + 1;
         % Write variable data to file
         if isa(value,'string') || isa(value,'char')
             target = fullfile(destination,[varname,'.txt']);
@@ -139,6 +156,11 @@ for i=1:length(mat_files)
             fprintf(f,'%s','Do not recognize datatype.');
             fclose(f);
         end
+    end
+    if saved_vars == 0
+        f = fopen(fullfile(issues,'issues.txt'),'a');
+        fprintf(f,['No variables found for Student Number ',student_number,' Canvas ID ',canvas_id,' filename ',filename,'\n']);
+        fclose(f);
     end
 end
 
