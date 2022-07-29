@@ -1,6 +1,6 @@
-from app import db, Datatype
+from app import db
+from app.models import Datatype
 
-db.drop_all()
 db.create_all()
 
 numeric = Datatype(name='numeric',extension='csv')

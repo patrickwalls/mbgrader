@@ -1,34 +1,28 @@
 # Step-by-step Guide for *mbgrader*
+
 ## Introduction
+
 This guide is intended to help installing and using *mbgrader*, a custom web application for batch grading assignments. Visit [here](https://github.com/patrickwalls/mbgrader) for more information about the software.
 
 ## Installation
-### Environment 
-The following packages are required in order to use *mbgrader*:
 
-	flask=1.1.1
-	flask-sqlalchemy=2.4.0
-	numpy=1.16.4
-	pandas=0.25.1
-	python=3.7.4
-	sqlalchemy=1.3.7
-	sqlite=3.29.0
-Please make sure they are installed and the versions are up to date.
-****
-### Downloading
-1. Go to a directory where grading will take place.
-2. In the directory, open terminal, and input:
+Clone the git repositiory:
 
-		(base) $ git clone https://github.com/patrickwalls/mbgrader.git
-	
-3. After cloning, go to the `./mbgrader` folder and type `python init_db.py` in the terminal. The complete codes look like this: 
+    git clone https://github.com/patrickwalls/mbgrader.git
 
-		(base) $ cd mbgrader/
-		(base) $ python init_db.py  #(or python3 init_db.py)
-	
+See `environment.yml` for required Python packages. Or create a custom Python environment using conda:
+
+    conda env create -f environment.yml
+    conda activate mbgrader
+
+Initialize the SQLite database:
+
+    python init_db.py
+
 4. Note you only need to run `python init_db.py` once for all. Running it a second time will erase previous grading records. Then the *mbgrader* is all set.
 
 ## Preparing Assignments
+
 ### Create files for the course:
 
 1. **classlist.csv**:

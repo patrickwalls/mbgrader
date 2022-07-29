@@ -1,9 +1,12 @@
 .DS_Store
-classlist.csv
 issues/
 feedback/
 grades/
 canvas/
-submissions/example1/
-app/app.db
+submissions/
+app.db
+token.txt
+*checkpoint*
 app/__pycache__/
+*.pyc
+__pycache__/
