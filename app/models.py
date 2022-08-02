@@ -189,11 +189,25 @@ class Question(db.Model):
                     batched = True
                     continue
             if not batched:
-                this_batch = Batch(grade=0,comments='',datatype_id=response.datatype_id,question_id=self.id)
+                this_batch = Batch(grade=0,
+                                   comments='',
+                                   datatype_id=response.datatype_id,
+                                   question_id=self.id,
+                                   next_id=0,
+                                   previous_id=0)
                 db.session.add(this_batch)
                 db.session.commit()
             batch_response = BatchResponse(response_id=response.id,batch_id=this_batch.id,status=status)
             db.session.add(batch_response)
+            db.session.commit()
+        
+        batch_list = sorted(list(self.batches), key=lambda b: b.to_dict()['total_batch_responses'], reverse=True)
+        for n,batch in enumerate(batch_list):
+            next_batch_index = (n + 1) % len(batch_list)
+            batch.next_id = batch_list[next_batch_index].id
+            previous_batch_index = (n - 1) % len(batch_list)
+            batch.previous_id = batch_list[previous_batch_index].id
+            db.session.add(batch)
             db.session.commit()
 
     def total_batches(self):
@@ -225,6 +239,8 @@ class Batch(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     grade = db.Column(db.Integer)
     comments = db.Column(db.String(280))
+    next_id = db.Column(db.Integer)
+    previous_id = db.Column(db.Integer)
 
     question_id = db.Column(db.Integer, db.ForeignKey('question.id'), nullable=False)
     datatype_id = db.Column(db.Integer, db.ForeignKey('datatype.id'), nullable=False)
@@ -316,6 +332,8 @@ class Batch(db.Model):
                 'datatype': datatype,
                 'total_batch_responses': self.total_responses(),
                 'total_question_responses': self.question.total_responses(),
+                'next_id': self.next_id,
+                'previous_id': self.previous_id,
                 'data': dataJSON}
 
 class Response(db.Model):

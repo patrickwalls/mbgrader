@@ -92,7 +92,10 @@ def batch(assignment_id,question_id):
         question = Question.query.get_or_404(question_id)
         question.delete_batches()
         question.create_batches()
-        return jsonify([batch.to_dict() for batch in question.batches])
+        batch_list = sorted([batch.to_dict() for batch in question.batches],
+                            key=lambda b: b['total_batch_responses'],
+                            reverse=True)
+        return jsonify(batch_list)
     elif request.method == 'GET' and create == 'false':
         question = Question.query.get_or_404(question_id)
         return jsonify([batch.to_dict() for batch in question.batches])

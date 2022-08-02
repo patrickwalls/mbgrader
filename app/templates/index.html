@@ -20,10 +20,7 @@
 
     <h5>
       <a href="#assignments"><span class="icon-home"></span></a>
-      /
-      <a href="" id="nav-assignment" style="display: none; color: black"></a>
-      /
-      <a href="" id="nav-question" style="display: none; color: black"></a>
+      <span id="navigation"></span>
     </h5>
 
 
@@ -56,7 +53,7 @@
           <form class="input-group vertical">
             <input type="text" id="new_assignment_name" placeholder="Assignment Name"/>
           </form>
-          <button id="create_assignment" class="">Create</button>
+          <button type="button" id="create_assignment" class="">Create</button>
         </div>
       </div>
 
@@ -109,7 +106,7 @@
             <input type="text" id="new_tolerance" placeholder="Tolerance" value="0.0001"/>
             <textarea id="new_preprocessing" placeholder="def fun(s,r):"/></textarea>
           </form>
-          <button id="create_question">Create</button>
+          <button type="button"  id="create_question">Create</button>
         </div>
       </div>
 
@@ -150,7 +147,7 @@
             <textarea id="new_response_expression" placeholder="lambda v: v[0] + v[1] - v[2]"/></textarea>
             <input type="text" id="new_response_extension" placeholder="Extension ('csv' or 'txt' or 'sym')"/>
           </form>
-          <button id="create_response">Create</button>
+          <button type="button" id="create_response">Create</button>
         </div>
       </div>
 
@@ -211,15 +208,14 @@
 </div>
 
 <!-- ########## TEMPLATES ########## -->
-
 <script id="assignment" type="text/template">
   <td><%= name %></td>
   <td><%= total_submissions %></td>
   <td><%= total_questions %></td>
   <td><%= total_points %></td>
   <td>
-    <button class="grade">Grade</button>
-    <button class="delete">Delete</button>
+    <button type="button" class="grade">Grade</button>
+    <button type="button" class="delete">Delete</button>
   </td>
 </script>
 
@@ -231,9 +227,9 @@
   <td><%= tolerance %></td>
   <td><%= total_batches %></td>
   <td>
-    <button class="create_batches">Batch!</button>
-    <button class="grade_batches">Grade</button>
-    <button class="delete_question">Delete</button>
+    <button type="button" class="create_batches">Batch!</button>
+    <button type="button" class="grade_batches">Grade</button>
+    <button type="button" class="delete_question">Delete</button>
   </td>
 </script>
 
@@ -244,7 +240,7 @@
   <td><%= grade %></td>
   <td><%= comments %></td>
   <td>
-    <button class="grade_batch">Grade</button>
+    <button type="button" class="grade_batch">Grade</button>
   </td>
 </script>
 
@@ -288,9 +284,9 @@
     <input type="text" id="batch-grade" value="<%= grade %>"/>
     <label for="batch-comments">Comments</label>
     <input type="text" id="batch-comments" value="<%= comments %>"/>
-    <button id="submit-batch">Submit</button>
-    <button id="next-batch">Next</button>
-    <button id="previous-batch">Previous</button>
+    <button type="button" id="submit-batch">Submit</button>
+    <button type="button" id="next-batch">Next</button>
+    <button type="button" id="previous-batch">Previous</button>
   </form>
 
 </script>
@@ -302,25 +298,11 @@
 <script src="{{ url_for('static', filename='js/lib/backbone.js') }}"></script>
 <script src="{{ url_for('static', filename='js/lib/plotly.js') }}"></script>
 
-<script src="{{ url_for('static', filename='js/models/assignment.js') }}"></script>
-<script src="{{ url_for('static', filename='js/models/question.js') }}"></script>
-<script src="{{ url_for('static', filename='js/models/batch.js') }}"></script>
-
-<script src="{{ url_for('static', filename='js/collections/assignments.js') }}"></script>
-<script src="{{ url_for('static', filename='js/collections/questions.js') }}"></script>
-<script src="{{ url_for('static', filename='js/collections/batches.js') }}"></script>
-
-<script src="{{ url_for('static', filename='js/views/assignment.js') }}"></script>
-<script src="{{ url_for('static', filename='js/views/assignments.js') }}"></script>
-<script src="{{ url_for('static', filename='js/views/question.js') }}"></script>
-<script src="{{ url_for('static', filename='js/views/questions.js') }}"></script>
-<script src="{{ url_for('static', filename='js/views/batch.js') }}"></script>
-<script src="{{ url_for('static', filename='js/views/batches.js') }}"></script>
-<script src="{{ url_for('static', filename='js/views/grading.js') }}"></script>
-
+<script src="{{ url_for('static', filename='js/models.js') }}"></script>
+<script src="{{ url_for('static', filename='js/collections.js') }}"></script>
+<script src="{{ url_for('static', filename='js/views.js') }}"></script>
 <script src="{{ url_for('static', filename='js/router.js') }}"></script>
 <script src="{{ url_for('static', filename='js/app.js') }}"></script>
-
 
 </body>
 
