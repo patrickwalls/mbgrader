@@ -36,38 +36,13 @@ Open a browser and navigate to `http://127.0.0.1:5000/`. Create a new assignment
                 var2.csv
                 var3.txt
 
-Create a new question and enter a preprocessing function if necessary. Requirements for the preprocessing function are:
+See the [documentation](docs/guide.md) for more information.
 
-* Function must be named `fun`.
-* Input parameters:
-  * `s` is the student number: `int`
-  * `r` is the response: `str`, `np.float64`, or `np.ndarray`
-* Return value *must* be the same type as the response.
+## Canvas LMS API Integration
 
-For example, the preprocessing function for the question "What is your student number?":
+The Jupyter notebook `canvas2mbgrader.ipynb` provides Canvas LMS API integration for mbgrader:
 
-```python
-import numpy as np
-
-def fun(s,r):
-    if isinstance(r,str):
-        return "text"
-    elif isinstance(r,np.ndarray):
-        return np.array([0,0])
-    else:
-        if abs(r - s) > 0:
-            return np.float64(1)
-        else:
-            return np.float64(0)
-```
-
-Create a new response from student responses by entering:
-
-* New response variable name
-* Comma-separated list of variables used to compute new response
-* `lambda` to compute new variable where input is a list and entries are the selected variables
-* Extension to indicate datatype
-
-## Canvas
-
-The script `canvas2mbgrader.m` reads MATLAB `.mat` and `.fig` files from the `canvas` folder and saves the data to the `submissions` folder. The script requires a file `canvasIdstudentID.csv` with Canvas IDs in the first column and Student IDs in the second column.
+* Connect to Canvas LMS API
+* Download student submissions
+* Read student .mat and .fig files into mbgrader
+* Upload mbgrader grades and feedback to Canvas

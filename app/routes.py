@@ -12,7 +12,7 @@ def assignments():
         assignments = Assignment.query.all()
         return jsonify([assignment.to_dict() for assignment in assignments])
     elif request.method == 'POST':
-        assignment = Assignment(name=request.json['name'])
+        assignment = Assignment(name=request.json['name'],folder_name=request.json['folder_name'])
         db.session.add(assignment)
         db.session.commit()
         assignment.load_submissions()
@@ -41,8 +41,8 @@ def grades(assignment_id):
 @app.route('/assignments/<int:assignment_id>/vars')
 def vars(assignment_id):
     responses = Response.query.filter_by(assignment_id=assignment_id).all()
-    vars = sorted(list(set([response.var_name.lower() for response in responses])))
-    return jsonify({'vars': vars})
+    vars_list = sorted(list(set([response.var_name.lower() for response in responses])))
+    return jsonify({'vars': vars_list})
 
 @app.route('/assignments/<int:assignment_id>/questions', methods=['GET','POST'])
 def questions(assignment_id):

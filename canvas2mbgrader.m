@@ -28,15 +28,6 @@ if isfolder(mbgrader_submissions)
 end
 mkdir(mbgrader_submissions);
 
-% Enter variable names to ignore (such as data provided with assignment)
-ignore_vars = input('Enter variable names to ignore (as comma-separated list with no spaces such as ans,varA,varB): ','s');
-ignore_vars = split(ignore_vars,',');
-
-% Enter preferred variable names if there are naming conflicts (such as upper
-% and lower case names like A and a, X and x, ...)
-preferred_names = input('Enter preferred variable names (as comma-separated list with no spaces such as X,Y,Z): ','s');
-preferred_names = split(preferred_names,',');
-
 % Copy Canvas submissions to temporary folder
 temp = 'temp';
 if isfolder(temp)
@@ -55,16 +46,7 @@ mkdir(issues);
 mat_files = dir(fullfile(temp,'*.mat'));
 fig_files = dir(fullfile(temp,'*.fig'));
 
-% Omit variables defined by the provided file
-provided_filename = input('Enter the name of the file provided with the assignment:', 's');
-try
-    provided = load(fullfile(provided_filename));
-    provided_vars = fieldnames(provided);
-    clear provided provided_filename
-catch
-    display('provided file was not found');
-    return
-end
+disp('Loading MATLAB files to mbgrader/submissions folder ...')
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%% READ .MAT FILES %%%%%
@@ -105,17 +87,12 @@ for i=1:length(mat_files)
     saved_vars = 0;
     for i=1:length(vars)
         varname = vars{i};
-        % ignore variables from the provided file
-        if ismember(varname, provided_vars)
-            continue
-        end
         value = getfield(S,varname);
         varname = lower(varname);
-        % Ignore the variable called filename and any other user specified
-        % variable names to ignore, and skip duplicate variable names
-        if strcmp(varname,'filename') || any(strcmp(ignore_vars,varname))
+        % Ignore variable filename and skip duplicate variable names (ie. x and X)
+        if strcmp(varname,'filename')
             continue
-        elseif ~isempty(dir([varname,'.*'])) && ~any(strcmp(varname,preferred_names))
+        elseif ~isempty(dir([varname,'.*']))
             f = fopen(fullfile(issues,'issues.txt'),'a');
             fprintf(f,['Duplicate variable ',varname,' ignored for Student Number ',student_number,' Canvas ID ',canvas_id,'\n']);
             fclose(f);

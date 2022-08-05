@@ -5,6 +5,7 @@ grades/
 canvas/
 submissions/
 app.db
+canvasIDstudentID.csv
 token.txt
 *checkpoint*
 app/__pycache__/

@@ -6,7 +6,6 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/mini.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
   <title>mbgrader</title>
 </head>
 
@@ -31,6 +30,7 @@
       <thead>
         <tr>
           <th>Assignment</th>
+          <th>Folder</th>
           <th>Submissions</th>
           <th>Questions</th>
           <th>Points</th>
@@ -52,6 +52,7 @@
           <h3 class="section">Create Assignment</h3>
           <form class="input-group vertical">
             <input type="text" id="new_assignment_name" placeholder="Assignment Name"/>
+            <input type="text" id="new_assignment_folder_name" placeholder="Folder Name (submissions/{assignment_name})"/>
           </form>
           <button type="button" id="create_assignment" class="">Create</button>
         </div>
@@ -104,7 +105,7 @@
             <input type="text" id="new_alt_var_name" placeholder="Other Variable Names"/>
             <input type="text" id="new_max_grade" placeholder="Maximum Grade"/>
             <input type="text" id="new_tolerance" placeholder="Tolerance" value="0.0001"/>
-            <textarea id="new_preprocessing" placeholder="def fun(s,r):"/></textarea>
+            <textarea id="new_preprocessing" placeholder="def fun(s,r):"></textarea>
           </form>
           <button type="button"  id="create_question">Create</button>
         </div>
@@ -144,7 +145,7 @@
           <form class="input-group vertical">
             <input type="text" id="new_response_name" placeholder="Response Variable Name"/>
             <input type="text" id="new_response_vars" placeholder="Variables in Expression ('E1,E2,E3')"/>
-            <textarea id="new_response_expression" placeholder="lambda v: v[0] + v[1] - v[2]"/></textarea>
+            <textarea id="new_response_expression" placeholder="lambda v: v[0] + v[1] - v[2]"></textarea>
             <input type="text" id="new_response_extension" placeholder="Extension ('csv' or 'txt' or 'sym')"/>
           </form>
           <button type="button" id="create_response">Create</button>
@@ -158,17 +159,6 @@
         <div class="card large">
           <label for="creating-responses-modal-control" style="display: none;" class="modal-close"></label>
           <h3>Creating responses ...</h3>
-          <div class="spinner" style="margin: 20px auto;"></div>
-        </div>
-      </div>
-
-    <!-- CREATING BATCHES MODAL -->
-    <label for="creating-batches-modal-control" style="display: none;"></label>
-    <input type="checkbox" id="creating-batches-modal-control" class="modal">
-      <div>
-        <div class="card large">
-          <label for="creating-batches-modal-control" style="display: none;" class="modal-close"></label>
-          <h3>Creating batches ...</h3>
           <div class="spinner" style="margin: 20px auto;"></div>
         </div>
       </div>
@@ -194,6 +184,17 @@
 
       </tbody>
     </table>
+      
+    <!-- CREATING BATCHES MODAL -->
+    <label for="creating-batches-modal-control" style="display: none;"></label>
+    <input type="checkbox" id="creating-batches-modal-control" class="modal">
+      <div>
+        <div class="card large">
+          <label for="creating-batches-modal-control" style="display: none;" class="modal-close"></label>
+          <h3>Creating batches ...</h3>
+          <div class="spinner" style="margin: 20px auto;"></div>
+        </div>
+      </div>
 
   </section>
 
@@ -210,6 +211,7 @@
 <!-- ########## TEMPLATES ########## -->
 <script id="assignment" type="text/template">
   <td><%= name %></td>
+  <td><%= folder_name %></td>
   <td><%= total_submissions %></td>
   <td><%= total_questions %></td>
   <td><%= total_points %></td>

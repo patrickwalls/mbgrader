@@ -9,13 +9,14 @@ import json
 class Assignment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=True, nullable=False)
+    folder_name = db.Column(db.String(80), unique=True, nullable=False)
 
     questions = db.relationship('Question', backref='assignment', lazy=True, cascade='all,delete')
     responses = db.relationship('Response', backref='assignment', lazy=True, cascade='all,delete')
     submissions = db.relationship('Submission', backref='assignment', lazy=True, cascade='all,delete')
 
     def load_submissions(self):
-        student_ids = [int(os.path.basename(s)) for s in glob(os.path.join('submissions',self.name,'*'))]
+        student_ids = [int(os.path.basename(s)) for s in glob(os.path.join('submissions',self.folder_name,'*'))]
         for student_id in student_ids:
             student = Student.query.get(student_id)
             if not student:
@@ -23,7 +24,7 @@ class Assignment(db.Model):
             db.session.add(student)
             submission = Submission(assignment_id=self.id,student_id=student_id,grade=0,feedback='')
             db.session.add(submission)
-            response_files = [os.path.basename(r) for r in glob(os.path.join('submissions',self.name,str(student_id),'*'))]
+            response_files = [os.path.basename(r) for r in glob(os.path.join('submissions',self.folder_name,str(student_id),'*'))]
             for response_file in response_files:
                 response_file_split = response_file.split('.')
                 var_name, extension = response_file_split[0], response_file_split[-1]
@@ -37,7 +38,7 @@ class Assignment(db.Model):
         fun = eval(expression)
         for submission in self.submissions:
             student_id = submission.student_id
-            filename = os.path.join('submissions',self.name,str(student_id),var_name + '.' + extension)
+            filename = os.path.join('submissions',self.folder_name,str(student_id),var_name + '.' + extension)
             student_responses = []
             for var in [v.lower() for v in vars]:
                 response = Response.query.filter_by(assignment_id=self.id,student_id=student_id,var_name=var).first()
@@ -50,7 +51,7 @@ class Assignment(db.Model):
                 print(value)
             except:
                 text_datatype = Datatype.query.filter_by(extension='txt').first()
-                filename = os.path.join('submissions',self.name,str(student_id),var_name + '.txt')
+                filename = os.path.join('submissions',self.folder_name,str(student_id),var_name + '.txt')
                 f = open(filename,'w')
                 f.write('Error')
                 f.close()
@@ -77,7 +78,7 @@ class Assignment(db.Model):
     def save_grades(self):
         grades_folder = 'grades'
         os.makedirs(grades_folder,exist_ok=True)
-        assignment_feedback_folder = os.path.join('feedback',self.name)
+        assignment_feedback_folder = os.path.join('feedback',self.folder_name)
         os.makedirs(assignment_feedback_folder,exist_ok=True)
         old_feedback = glob(os.path.join(assignment_feedback_folder,'*.txt'))
         for f in old_feedback:
@@ -101,7 +102,7 @@ class Assignment(db.Model):
         grades['Total'] = grades.sum(axis=1)
 
         grades = pd.merge(grades,submissions,left_index=True,right_on='Student ID',how='outer').fillna(0).set_index('Student ID')
-        grades.to_csv(os.path.join(grades_folder,self.name) + '.csv')
+        grades.to_csv(os.path.join(grades_folder,self.folder_name) + '.csv')
 
         comments = df.pivot(index='Student ID',columns='Question',values='Comments').fillna('')
         comments = pd.merge(comments,submissions,left_index=True,right_on='Student ID',how='outer').fillna('').set_index('Student ID')
@@ -112,7 +113,7 @@ class Assignment(db.Model):
         for student in grades.index:
             filename = os.path.join(assignment_feedback_folder,str(student) + '.txt')
             f = open(filename,'w')
-            feedback = ''
+            feedback = '{}\nStudent ID: {}\n'.format(self.name,student)
             for question in comments.columns:
                 comment = comments.loc[student,question]
                 status = statuses.loc[student,question]
@@ -126,6 +127,7 @@ class Assignment(db.Model):
     def to_dict(self):
         return {'id': self.id,
                 'name': self.name,
+                'folder_name': self.folder_name,
                 'total_points': self.total_points(),
                 'total_questions': self.total_questions(),
                 'total_submissions': self.total_submissions()}
@@ -136,7 +138,7 @@ class Question(db.Model):
     name = db.Column(db.String(80), nullable=False)
     var_name = db.Column(db.String(80), nullable=False)
     alt_var_name = db.Column(db.String(80), nullable=False)
-    max_grade = db.Column(db.Integer, nullable=False)
+    max_grade = db.Column(db.Integer, default=0)
     tolerance = db.Column(db.Float, default=0.001)
     preprocessing = db.Column(db.String(280))
 
@@ -345,7 +347,7 @@ class Response(db.Model):
     assignment_id = db.Column(db.Integer, db.ForeignKey('assignment.id'), nullable=False)
 
     def get_fullfile(self):
-        return os.path.join('submissions',self.assignment.name,str(self.student_id),self.var_name + '.' + self.datatype.extension)
+        return os.path.join('submissions',self.assignment.folder_name,str(self.student_id),self.var_name + '.' + self.datatype.extension)
 
     def get_data(self):
         dtype = self.datatype.name
