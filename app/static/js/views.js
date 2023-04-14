@@ -91,9 +91,13 @@ app.AssignmentsView = Backbone.View.extend({
     
     createAssignment: function() {
         this.$('#assignment-modal-close').trigger('click');
-        this.$('#loading-submissions-modal-control').trigger('click');
         var name = this.$('#new_assignment_name').val();
         var folder_name = this.$('#new_assignment_folder_name').val();
+        if (_.contains(this.collection.pluck('name'),name) || _.contains(this.collection.pluck('folder_name'),folder_name)) {
+            this.$('#assignment-error-modal-control').trigger('click');
+            return;
+        }
+        this.$('#loading-submissions-modal-control').trigger('click');
         this.$('#new_assignment_name').val('');
         this.$('#new_assignment_folder_name').val('');
         this.collection.create({'name': name,'folder_name': folder_name},{
