@@ -93,7 +93,7 @@ app.AssignmentsView = Backbone.View.extend({
         this.$('#assignment-modal-close').trigger('click');
         var name = this.$('#new_assignment_name').val();
         var folder_name = this.$('#new_assignment_folder_name').val();
-        if (_.contains(this.collection.pluck('name'),name) || _.contains(this.collection.pluck('folder_name'),folder_name)) {
+        if (!name || !folder_name || _.contains(this.collection.pluck('name'),name) || _.contains(this.collection.pluck('folder_name'),folder_name)) {
             this.$('#assignment-error-modal-control').trigger('click');
             return;
         }
@@ -164,12 +164,12 @@ app.QuestionsView = Backbone.View.extend({
     },
     
     render: function() {
-        this.collection.each(this.renderQuestion,this);
-    },
-    
-    renderQuestion: function(question) {
-        var questionView = new app.QuestionView({model: question});
-        this.$('table').append(questionView.render().el);
+        this.$('tbody').empty();
+        this.collection.each(function(question) {
+            var questionView = new app.QuestionView({model: question});
+            this.$('tbody').append(questionView.render().el);
+        },this);
+        return this;
     },
     
     events: {
@@ -180,12 +180,17 @@ app.QuestionsView = Backbone.View.extend({
     },
     
     createQuestion: function() {
+        this.$('#question-modal-close').trigger('click');
         var name = this.$('#new_question_name').val();
         var var_name = this.$('#new_var_name').val();
         var alt_var_name = this.$('#new_alt_var_name').val();
         var max_grade = this.$('#new_max_grade').val();
         var tolerance = this.$('#new_tolerance').val();
         var preprocessing = this.$('#new_preprocessing').val();
+        if (!name || !var_name || _.contains(this.collection.pluck('name'),name) || _.contains(this.collection.pluck('var_name'),var_name)) {
+            this.$('#question-error-modal-control').trigger('click');
+            return;
+        }
         var question = this.collection.create(
             {
                 'name': name, 'var_name': var_name, 'alt_var_name': alt_var_name, 'max_grade': max_grade,
@@ -199,7 +204,6 @@ app.QuestionsView = Backbone.View.extend({
                     this.$('#new_max_grade').val('');
                     this.$('#new_tolerance').val('');
                     this.$('#new_preprocessing').val('');
-                    this.$('#question-modal-close').trigger('click');
                 }
             });
     },

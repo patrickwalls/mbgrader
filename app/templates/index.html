@@ -65,7 +65,7 @@
         <div class="card large">
           <label for="assignment-error-modal-control" class="modal-close"></label>
           <h3 class="section">Error</h3>
-          <p style="margin: 20px 10px;">Assignment names and folders must be unique.</p>
+          <p style="margin: 20px 10px;">Assignment names and folders must be unique and non-empty.</p>
         </div>
       </div>
 
@@ -114,11 +114,22 @@
             <input type="text" id="new_question_name" placeholder="Question Name"/>
             <input type="text" id="new_var_name" placeholder="Variable Name"/>
             <input type="text" id="new_alt_var_name" placeholder="Other Variable Names"/>
-            <input type="text" id="new_max_grade" placeholder="Maximum Grade"/>
+            <input type="text" id="new_max_grade" placeholder="Maximum Grade" value="1"/>
             <input type="text" id="new_tolerance" placeholder="Tolerance" value="0.0001"/>
             <textarea id="new_preprocessing" placeholder="def fun(s,r):"></textarea>
           </form>
           <button type="button"  id="create_question">Create</button>
+        </div>
+      </div>
+
+    <!-- QUESTION ERROR MODAL -->
+    <label for="question-error-modal-control" style="display: none;"></label>
+    <input type="checkbox" id="question-error-modal-control" class="modal">
+      <div>
+        <div class="card large">
+          <label for="question-error-modal-control" class="modal-close"></label>
+          <h3 class="section">Error</h3>
+          <p style="margin: 20px 10px;">Question names and variable names must be unique and non-empty.</p>
         </div>
       </div>
 

@@ -53,8 +53,8 @@ def questions(assignment_id):
         question = Question(name=request.json['name'],
                             var_name=request.json['var_name'].lower(),
                             alt_var_name=request.json['alt_var_name'].lower(),
-                            max_grade=request.json['max_grade'],
-                            tolerance=request.json['tolerance'],
+                            max_grade=request.json['max_grade'] if request.json['max_grade'] != '' else 1,
+                            tolerance=request.json['tolerance'] if request.json['tolerance'] != '' else 0.0001,
                             preprocessing=request.json['preprocessing'],
                             assignment_id=assignment_id)
         db.session.add(question)
