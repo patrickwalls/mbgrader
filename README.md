@@ -11,16 +11,16 @@ Clone the repository:
 
 Setup environment:
 
-    conda env create -f environment.yml
-    conda activate mbgrader
+    python -m venv env
+    source env/bin/activate
+    pip install --editable .
 
 Initialize the database:
 
-    python init_db.py
+    flask init-db
 
-Setup the Flask environment variable and run:
+Run the development server:
 
-    export FLASK_APP=app
     flask run
 
 Open a browser and navigate to `http://127.0.0.1:5000/`. Create a new assignment by entering the corresponding folder name locating in the `submissions` folder. There is an example assignment called `example1`. mbgrader assumes the folder structure:
