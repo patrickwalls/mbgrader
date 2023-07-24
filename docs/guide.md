@@ -10,16 +10,17 @@ Clone the git repositiory:
 
     git clone https://github.com/patrickwalls/mbgrader.git
 
-See `environment.yml` for required Python packages. Or create a custom Python environment using conda:
+See `pyproject.toml` for required Python packages. Or create a virtual environment using pip:
 
-    conda env create -f environment.yml
-    conda activate mbgrader
+    python -m venv env
+	source env/bin/activate
+    pip install --editable .
 
 Initialize the SQLite database:
 
-    python init_db.py
+    flask init-db
 
-4. Note you only need to run `python init_db.py` once for all. Running it a second time will erase previous grading records. Then the *mbgrader* is all set.
+4. Note you only need to run `flask init-db` once for all. Running it a second time will erase previous grading records. Then the *mbgrader* is all set.
 
 ## Preparing Assignments
 
@@ -87,8 +88,7 @@ _2._ The above steps should be repeatedly done for each assignment before the ad
 
 1. Open terminal in the `./mbgrader/` folder, and enter the following command:
 
-		(base) $ export FLASK_APP=app
-		(base) $ flask run  #(or python/python3 -m flask run)
+		(env) $ flask run  #(or python/python3 -m flask run)
 
 2. You are expected to see output below meaning the application is launched. 
 

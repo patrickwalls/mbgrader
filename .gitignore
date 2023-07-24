@@ -11,3 +11,5 @@ token.txt
 app/__pycache__/
 *.pyc
 __pycache__/
+env/
+mbgrader.egg-info
