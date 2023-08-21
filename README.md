@@ -15,13 +15,9 @@ Setup environment:
     source env/bin/activate
     pip install --editable .
 
-Initialize the database:
-
-    flask init-db
-
 Run the development server:
 
-    flask run
+    mbgrader
 
 Open a browser and navigate to `http://127.0.0.1:5000/`. Create a new assignment by entering the corresponding folder name locating in the `submissions` folder. There is an example assignment called `example1`. mbgrader assumes the folder structure:
 
