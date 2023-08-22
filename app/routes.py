@@ -2,6 +2,9 @@ from app import app, db
 from app.models import Assignment, Question, Batch, Response, BatchResponse, Datatype, Student, Submission
 from flask import render_template, jsonify, request, url_for, redirect
 
+from .services.assignment import AssignmentService
+from .selectors.assignment import get_all_assignments, get_assignment, get_assignment_vars
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -9,28 +12,30 @@ def index():
 @app.route('/assignments', methods=['GET','POST'])
 def assignments():
     if request.method == 'GET':
-        assignments = Assignment.query.all()
-        return jsonify([assignment.to_dict() for assignment in assignments])
+        assignments = get_all_assignments()
+        return jsonify(assignments)
+
     elif request.method == 'POST':
-        assignment = Assignment(name=request.json['name'],folder_name=request.json['folder_name'])
-        db.session.add(assignment)
-        db.session.commit()
-        assignment.load_submissions()
-        return jsonify(assignment.to_dict())
+        name = request.json["name"]
+        folder_name = request.json["folder_name"]
+        service = AssignmentService(
+            name=name, folder_name=folder_name
+        )
+        new_assignment = service.create()
+        service.load_submissions()
+
+        return jsonify(new_assignment)
 
 @app.route('/assignments/<int:assignment_id>', methods=['GET','DELETE'])
 def assignment(assignment_id):
     if request.method == 'GET':
-        assignment = Assignment.query.get_or_404(assignment_id)
-        return jsonify(assignment.to_dict())
+        assignment = get_assignment(assignment_id)
+        return jsonify(assignment)
+
     if request.method == 'DELETE':
-        assignment = Assignment.query.get(assignment_id)
-        if assignment:
-            db.session.delete(assignment)
-            db.session.commit()
-            return ('',204)
-        else:
-            return ('',204)
+        service = AssignmentService(assignment_id=assignment_id)
+        service.delete()
+        return ('',204)
 
 @app.route('/assignments/<int:assignment_id>/grades')
 def grades(assignment_id):
@@ -40,8 +45,7 @@ def grades(assignment_id):
 
 @app.route('/assignments/<int:assignment_id>/vars')
 def vars(assignment_id):
-    responses = Response.query.filter_by(assignment_id=assignment_id).all()
-    vars_list = sorted(list(set([response.var_name.lower() for response in responses])))
+    vars_list = get_assignment_vars(assignment_id)
     return jsonify({'vars': vars_list})
 
 @app.route('/assignments/<int:assignment_id>/questions', methods=['GET','POST'])

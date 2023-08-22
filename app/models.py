@@ -15,25 +15,6 @@ class Assignment(db.Model):
     responses = db.relationship('Response', backref='assignment', lazy=True, cascade='all,delete')
     submissions = db.relationship('Submission', backref='assignment', lazy=True, cascade='all,delete')
 
-    def load_submissions(self):
-        student_ids = [int(os.path.basename(s)) for s in glob(os.path.join('submissions',self.folder_name,'*'))]
-        for student_id in student_ids:
-            student = Student.query.get(student_id)
-            if not student:
-                student = Student(id=student_id)
-            db.session.add(student)
-            submission = Submission(assignment_id=self.id,student_id=student_id,grade=0,feedback='')
-            db.session.add(submission)
-            response_files = [os.path.basename(r) for r in glob(os.path.join('submissions',self.folder_name,str(student_id),'*'))]
-            for response_file in response_files:
-                response_file_split = response_file.split('.')
-                var_name, extension = response_file_split[0], response_file_split[-1]
-                var_name = var_name.lower()
-                datatype = Datatype.query.filter_by(extension=extension).first()
-                response = Response(assignment_id=self.id,student_id=student_id,datatype_id=datatype.id,var_name=var_name)
-                db.session.add(response)
-            db.session.commit()
-
     def create_response(self,var_name,vars,expression,extension):
         fun = eval(expression)
         for submission in self.submissions:
