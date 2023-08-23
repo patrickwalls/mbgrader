@@ -4,6 +4,9 @@ from flask import render_template, jsonify, request, url_for, redirect
 
 from .services.assignment import AssignmentService
 from .services.question import QuestionService
+from .services.grades import GradesService
+from .services.batch import BatchService
+
 from .selectors.assignment import get_all_assignments, get_assignment, get_assignment_vars
 from .selectors.question import get_questions_of_assignment, get_question
 
@@ -42,7 +45,12 @@ def assignment(assignment_id):
 @app.route('/assignments/<int:assignment_id>/grades')
 def grades(assignment_id):
     assignment = Assignment.query.get_or_404(assignment_id)
-    assignment.save_grades()
+    service = GradesService(
+        assignment_id=assignment.id,
+        assignment_name=assignment.name,
+        root_folder=assignment.folder_name,
+    )
+    service.save()
     return ('',200)
 
 @app.route('/assignments/<int:assignment_id>/vars')
@@ -72,7 +80,7 @@ def questions(assignment_id):
 @app.route('/assignments/<int:assignment_id>/questions/<int:question_id>', methods=['GET','DELETE'])
 def question(assignment_id,question_id):
     if request.method == 'GET':
-        question = get_question(question)
+        question = get_question(question_id)
         return jsonify(question)
     if request.method == 'DELETE':
         service = QuestionService(question_id=question_id)
@@ -93,13 +101,10 @@ def create_response(assignment_id):
 def batch(assignment_id,question_id):
     create = request.args.get('create')
     if request.method == 'GET' and create == 'true':
-        question = Question.query.get_or_404(question_id)
-        question.delete_batches()
-        question.create_batches()
-        batch_list = sorted([batch.to_dict() for batch in question.batches],
-                            key=lambda b: b['total_batch_responses'],
-                            reverse=True)
-        return jsonify(batch_list)
+        service = QuestionService(question_id=question_id)
+        service.delete_batches()
+        batches = service.create_batches()
+        return jsonify(batches)
     elif request.method == 'GET' and create == 'false':
         question = Question.query.get_or_404(question_id)
         return jsonify([batch.to_dict() for batch in question.batches])
@@ -110,9 +115,11 @@ def grade(assignment_id,question_id,batch_id):
         batch = Batch.query.get_or_404(batch_id)
         return jsonify(batch.to_dict())
     elif request.method == 'PUT':
-        batch = Batch.query.get_or_404(batch_id)
-        batch.grade = int(request.json['grade'])
-        batch.comments = request.json['comments']
-        db.session.add(batch)
-        db.session.commit()
-        return jsonify(batch.to_dict())
+        data = request.json
+        service = BatchService(
+            batch_id=batch_id,
+            grade=int(data["grade"]),
+            comments=data["comments"]
+        )
+        graded_batch = service.grade()
+        return jsonify(graded_batch)
