@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import importlib
 import json
+from pathlib import Path
 
 class Assignment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -15,36 +16,6 @@ class Assignment(db.Model):
     responses = db.relationship('Response', backref='assignment', lazy=True, cascade='all,delete')
     submissions = db.relationship('Submission', backref='assignment', lazy=True, cascade='all,delete')
 
-    def create_response(self,var_name,vars,expression,extension):
-        fun = eval(expression)
-        for submission in self.submissions:
-            student_id = submission.student_id
-            filename = os.path.join('submissions',self.folder_name,str(student_id),var_name + '.' + extension)
-            student_responses = []
-            for var in [v.lower() for v in vars]:
-                response = Response.query.filter_by(assignment_id=self.id,student_id=student_id,var_name=var).first()
-                if response:
-                    student_responses.append(response.get_data())
-                else:
-                    student_responses.append(None)
-            try:
-                value = fun(student_responses)
-                print(value)
-            except:
-                text_datatype = Datatype.query.filter_by(extension='txt').first()
-                filename = os.path.join('submissions',self.folder_name,str(student_id),var_name + '.txt')
-                f = open(filename,'w')
-                f.write('Error')
-                f.close()
-                new_response = Response(assignment_id=self.id,student_id=student_id,datatype_id=text_datatype.id,var_name=var_name.lower())
-                db.session.add(new_response)
-                db.session.commit()
-                continue
-            np.savetxt(filename,value,fmt='%.5f',delimiter=',')
-            this_datatype = Datatype.query.filter_by(extension=extension).first()
-            new_response = Response(assignment_id=self.id,student_id=student_id,datatype_id=this_datatype.id,var_name=var_name.lower())
-            db.session.add(new_response)
-            db.session.commit()
 
     def total_points(self):
         points = [question.max_grade for question in self.questions]
@@ -328,7 +299,11 @@ class Response(db.Model):
     assignment_id = db.Column(db.Integer, db.ForeignKey('assignment.id'), nullable=False)
 
     def get_fullfile(self):
-        return os.path.join('submissions',self.assignment.folder_name,str(self.student_id),self.var_name + '.' + self.datatype.extension)
+        submission_folder = Path("submissions/")
+        assignment_folder = Assignment.query.get(self.assignment_id).folder_name
+        student_folder = str(self.student_id)
+        response_file = f"{self.var_name}.{self.datatype.extension}"
+        return submission_folder / assignment_folder / student_folder / response_file
 
     def get_data(self):
         dtype = self.datatype.name

@@ -3,7 +3,9 @@ from app.models import Assignment, Question, Batch, Response, BatchResponse, Dat
 from flask import render_template, jsonify, request, url_for, redirect
 
 from .services.assignment import AssignmentService
+from .services.question import QuestionService
 from .selectors.assignment import get_all_assignments, get_assignment, get_assignment_vars
+from .selectors.question import get_questions_of_assignment, get_question
 
 @app.route('/')
 def index():
@@ -51,33 +53,31 @@ def vars(assignment_id):
 @app.route('/assignments/<int:assignment_id>/questions', methods=['GET','POST'])
 def questions(assignment_id):
     if request.method == 'GET':
-        questions = Question.query.filter_by(assignment_id=assignment_id).all()
-        return jsonify([question.to_dict() for question in questions])
+        questions = get_questions_of_assignment(assignment_id)
+        return jsonify(questions)
     elif request.method == 'POST':
-        question = Question(name=request.json['name'],
-                            var_name=request.json['var_name'].lower(),
-                            alt_var_name=request.json['alt_var_name'].lower(),
-                            max_grade=request.json['max_grade'] if request.json['max_grade'] != '' else 1,
-                            tolerance=request.json['tolerance'] if request.json['tolerance'] != '' else 0.0001,
-                            preprocessing=request.json['preprocessing'],
-                            assignment_id=assignment_id)
-        db.session.add(question)
-        db.session.commit()
-        return jsonify(question.to_dict())
+        data = request.json
+        service = QuestionService(
+            name=data["name"],
+            var_name=data["var_name"].lower(),
+            alt_var_name=data["alt_var_name"].lower(),
+            max_grade=data["max_grade"],
+            tolerance=data["tolerance"],
+            preprocessing=data["preprocessing"],
+            assignment_id=assignment_id,
+        )
+        question = service.create()
+        return jsonify(question)
 
 @app.route('/assignments/<int:assignment_id>/questions/<int:question_id>', methods=['GET','DELETE'])
 def question(assignment_id,question_id):
     if request.method == 'GET':
-        question = Question.query.get_or_404(question_id)
-        return jsonify(question.to_dict())
+        question = get_question(question)
+        return jsonify(question)
     if request.method == 'DELETE':
-        question = Question.query.get(question_id)
-        if question:
-            db.session.delete(question)
-            db.session.commit()
-            return ('',204)
-        else:
-            return ('',204)
+        service = QuestionService(question_id=question_id)
+        service.delete()
+        return ('',204)
 
 @app.route('/assignments/<int:assignment_id>/response', methods=['POST'])
 def create_response(assignment_id):
@@ -85,8 +85,8 @@ def create_response(assignment_id):
     vars = request.form['vars'].split(',')
     expression = request.form['expression']
     extension = request.form['extension']
-    assignment = Assignment.query.get_or_404(assignment_id)
-    assignment.create_response(var_name,vars,expression,extension)
+    service = AssignmentService(assignment_id=assignment_id)
+    service.create_responses(var_name, vars, expression, extension)
     return ('',200)
 
 @app.route('/assignments/<int:assignment_id>/questions/<int:question_id>/batches', methods=['GET'])
