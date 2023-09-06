@@ -16,11 +16,19 @@ See `pyproject.toml` for required Python packages. Or create a virtual environme
 	source env/bin/activate
     pip install --editable .
 
-Initialize the SQLite database:
+Run the server:
 
-    flask init-db
+	mbgrader
 
-4. Note you only need to run `flask init-db` once for all. Running it a second time will erase previous grading records. Then the *mbgrader* is all set.
+### Setting up mbgrader for development
+
+If you wish to edit the source code and take advantage of development features like hot reloading, *mbgrader* can be launched with flask cli commands. After cloning the repository and activating the virtual environment:
+
+	flask init-db
+	flask run
+
+
+Note you only need to run `flask init-db` once for all. Running it a second time will erase previous grading records. Then the *mbgrader* is all set.
 
 ## Preparing Assignments
 
@@ -88,7 +96,7 @@ _2._ The above steps should be repeatedly done for each assignment before the ad
 
 1. Open terminal in the `./mbgrader/` folder, and enter the following command:
 
-		(env) $ flask run  #(or python/python3 -m flask run)
+		(env) $ mbgrader  # (or flask run)
 
 2. You are expected to see output below meaning the application is launched. 
 

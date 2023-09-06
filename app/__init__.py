@@ -1,3 +1,4 @@
+from pathlib import Path
 from flask import Flask
 from flask.cli import with_appcontext
 import click
@@ -7,6 +8,7 @@ from flask_sqlalchemy import SQLAlchemy
 app = Flask(__name__)
 app.config.from_object(Config)
 db = SQLAlchemy(app)
+run = app.run
 
 from app import routes
 
