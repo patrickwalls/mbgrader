@@ -2,6 +2,14 @@ from app import app, db
 from app.models import Assignment, Question, Batch, Response, BatchResponse, Datatype, Student, Submission
 from flask import render_template, jsonify, request, url_for, redirect
 
+from .services.assignment import AssignmentService
+from .services.question import QuestionService
+from .services.grades import GradesService
+from .services.batch import BatchService
+
+from .selectors.assignment import get_all_assignments, get_assignment, get_assignment_vars
+from .selectors.question import get_questions_of_assignment, get_question
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -9,71 +17,75 @@ def index():
 @app.route('/assignments', methods=['GET','POST'])
 def assignments():
     if request.method == 'GET':
-        assignments = Assignment.query.all()
-        return jsonify([assignment.to_dict() for assignment in assignments])
+        assignments = get_all_assignments()
+        return jsonify(assignments)
+
     elif request.method == 'POST':
-        assignment = Assignment(name=request.json['name'],folder_name=request.json['folder_name'])
-        db.session.add(assignment)
-        db.session.commit()
-        assignment.load_submissions()
-        return jsonify(assignment.to_dict())
+        name = request.json["name"]
+        folder_name = request.json["folder_name"]
+        service = AssignmentService(
+            name=name, folder_name=folder_name
+        )
+        new_assignment = service.create()
+        service.load_submissions()
+
+        return jsonify(new_assignment)
 
 @app.route('/assignments/<int:assignment_id>', methods=['GET','DELETE'])
 def assignment(assignment_id):
     if request.method == 'GET':
-        assignment = Assignment.query.get_or_404(assignment_id)
-        return jsonify(assignment.to_dict())
+        assignment = get_assignment(assignment_id)
+        return jsonify(assignment)
+
     if request.method == 'DELETE':
-        assignment = Assignment.query.get(assignment_id)
-        if assignment:
-            db.session.delete(assignment)
-            db.session.commit()
-            return ('',204)
-        else:
-            return ('',204)
+        service = AssignmentService(assignment_id=assignment_id)
+        service.delete()
+        return ('',204)
 
 @app.route('/assignments/<int:assignment_id>/grades')
 def grades(assignment_id):
     assignment = Assignment.query.get_or_404(assignment_id)
-    assignment.save_grades()
+    service = GradesService(
+        assignment_id=assignment.id,
+        assignment_name=assignment.name,
+        root_folder=assignment.folder_name,
+    )
+    service.save()
     return ('',200)
 
 @app.route('/assignments/<int:assignment_id>/vars')
 def vars(assignment_id):
-    responses = Response.query.filter_by(assignment_id=assignment_id).all()
-    vars_list = sorted(list(set([response.var_name.lower() for response in responses])))
+    vars_list = get_assignment_vars(assignment_id)
     return jsonify({'vars': vars_list})
 
 @app.route('/assignments/<int:assignment_id>/questions', methods=['GET','POST'])
 def questions(assignment_id):
     if request.method == 'GET':
-        questions = Question.query.filter_by(assignment_id=assignment_id).all()
-        return jsonify([question.to_dict() for question in questions])
+        questions = get_questions_of_assignment(assignment_id)
+        return jsonify(questions)
     elif request.method == 'POST':
-        question = Question(name=request.json['name'],
-                            var_name=request.json['var_name'].lower(),
-                            alt_var_name=request.json['alt_var_name'].lower(),
-                            max_grade=request.json['max_grade'] if request.json['max_grade'] != '' else 1,
-                            tolerance=request.json['tolerance'] if request.json['tolerance'] != '' else 0.0001,
-                            preprocessing=request.json['preprocessing'],
-                            assignment_id=assignment_id)
-        db.session.add(question)
-        db.session.commit()
-        return jsonify(question.to_dict())
+        data = request.json
+        service = QuestionService(
+            name=data["name"],
+            var_name=data["var_name"].lower(),
+            alt_var_name=data["alt_var_name"].lower(),
+            max_grade=data["max_grade"],
+            tolerance=data["tolerance"],
+            preprocessing=data["preprocessing"],
+            assignment_id=assignment_id,
+        )
+        question = service.create()
+        return jsonify(question)
 
 @app.route('/assignments/<int:assignment_id>/questions/<int:question_id>', methods=['GET','DELETE'])
 def question(assignment_id,question_id):
     if request.method == 'GET':
-        question = Question.query.get_or_404(question_id)
-        return jsonify(question.to_dict())
+        question = get_question(question_id)
+        return jsonify(question)
     if request.method == 'DELETE':
-        question = Question.query.get(question_id)
-        if question:
-            db.session.delete(question)
-            db.session.commit()
-            return ('',204)
-        else:
-            return ('',204)
+        service = QuestionService(question_id=question_id)
+        service.delete()
+        return ('',204)
 
 @app.route('/assignments/<int:assignment_id>/response', methods=['POST'])
 def create_response(assignment_id):
@@ -81,21 +93,18 @@ def create_response(assignment_id):
     vars = request.form['vars'].split(',')
     expression = request.form['expression']
     extension = request.form['extension']
-    assignment = Assignment.query.get_or_404(assignment_id)
-    assignment.create_response(var_name,vars,expression,extension)
+    service = AssignmentService(assignment_id=assignment_id)
+    service.create_responses(var_name, vars, expression, extension)
     return ('',200)
 
 @app.route('/assignments/<int:assignment_id>/questions/<int:question_id>/batches', methods=['GET'])
 def batch(assignment_id,question_id):
     create = request.args.get('create')
     if request.method == 'GET' and create == 'true':
-        question = Question.query.get_or_404(question_id)
-        question.delete_batches()
-        question.create_batches()
-        batch_list = sorted([batch.to_dict() for batch in question.batches],
-                            key=lambda b: b['total_batch_responses'],
-                            reverse=True)
-        return jsonify(batch_list)
+        service = QuestionService(question_id=question_id)
+        service.delete_batches()
+        batches = service.create_batches()
+        return jsonify(batches)
     elif request.method == 'GET' and create == 'false':
         question = Question.query.get_or_404(question_id)
         return jsonify([batch.to_dict() for batch in question.batches])
@@ -106,9 +115,11 @@ def grade(assignment_id,question_id,batch_id):
         batch = Batch.query.get_or_404(batch_id)
         return jsonify(batch.to_dict())
     elif request.method == 'PUT':
-        batch = Batch.query.get_or_404(batch_id)
-        batch.grade = int(request.json['grade'])
-        batch.comments = request.json['comments']
-        db.session.add(batch)
-        db.session.commit()
-        return jsonify(batch.to_dict())
+        data = request.json
+        service = BatchService(
+            batch_id=batch_id,
+            grade=int(data["grade"]),
+            comments=data["comments"]
+        )
+        graded_batch = service.grade()
+        return jsonify(graded_batch)
