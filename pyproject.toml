@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "mbgrader"
 version = "0.1.0"
 dependencies = [
-    "flask == 2.3.2",
+    "flask == 3.1.3",
     "flask-sqlalchemy == 3.0.5",
     "numpy == 1.25.0",
     "pandas == 1.4",
